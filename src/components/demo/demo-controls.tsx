@@ -77,6 +77,16 @@ export function DemoBarView({
   renderedAt: number;
   stale: boolean;
 }) {
+  // In the admin without a sandbox you are the owner, editing the original.
+  if (!expiresAt && place === "admin")
+    return (
+      <div className="demo-bar" data-state="owner">
+        <p>
+          <span className="demo-dot" aria-hidden />
+          Original demo store: new demo stores copy what you change here.
+        </p>
+      </div>
+    );
   if (!expiresAt)
     return (
       <div className="demo-bar" data-state={stale ? "ended" : "visitor"}>

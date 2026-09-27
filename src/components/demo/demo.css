@@ -38,6 +38,10 @@
   background: #dc9a0e;
   box-shadow: 0 0 0 3px rgb(220 154 14 / 25%);
 }
+.demo-bar[data-state="owner"] .demo-dot {
+  background: #6f8fd6;
+  box-shadow: 0 0 0 3px rgb(111 143 214 / 25%);
+}
 .demo-bar[data-state="ended"] .demo-dot {
   background: #9a9e96;
   box-shadow: none;
