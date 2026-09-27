@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an improvement or a new capability.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the shop or customer situation, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+  - type: checkboxes
+    id: fit
+    attributes:
+      label: Fit with the project
+      description: See the invariants in AGENTS.md.
+      options:
+        - label: It works without a paid service, or as an optional adapter with a free local default.
+        - label: It doesn't require customers to create an account.

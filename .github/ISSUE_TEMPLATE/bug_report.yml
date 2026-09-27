@@ -1,0 +1,48 @@
+name: Bug report
+description: Something in Attar doesn't work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please don't include real customer data (names, phones, addresses) or secrets from your `.env`.
+        Security problems: use **Security → Report a vulnerability** instead of an issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to /products
+        2. Filter by …
+        3. See …
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it happen?
+      options:
+        - Local development (pnpm dev)
+        - Vercel + Neon
+        - Docker / self-hosted
+        - Other hosting
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Attar version or commit
+      placeholder: v0.1.0 or a commit SHA
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Server log lines, browser console errors, or screenshots (360 px width if it's a mobile layout issue).
+      render: text

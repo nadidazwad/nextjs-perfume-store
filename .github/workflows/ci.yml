@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, typecheck, test, build, seed
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4 # version comes from package.json "packageManager"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      # No .env and no database: the build must work for anyone who forks.
+      - run: pnpm build
+      # Zero-account path on the embedded database: migrate, seed, then seed
+      # again to prove it's idempotent, then check listings and facets.
+      - name: Seed smoke test (PGlite)
+        run: |
+          pnpm db:migrate
+          pnpm db:seed
+          pnpm db:seed
+          pnpm catalog:verify
+
+  docker:
+    name: Docker image builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker build --tag attar:ci .
+      - run: docker build --tag attar-tools:ci --target tools .

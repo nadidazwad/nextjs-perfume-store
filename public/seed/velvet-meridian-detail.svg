@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="960" viewBox="0 0 800 960" role="img" aria-labelledby="title desc">
+  <title id="title">Velvet Meridian</title><desc id="desc">PARFUM · Avenmere Atelier. Original illustration of a fictional fragrance.</desc>
+  <defs>
+    <linearGradient id="bg" x2=".8" y2="1"><stop stop-color="#f6f3ec"/><stop offset="1" stop-color="#e7e2d6"/></linearGradient>
+    <linearGradient id="glass"><stop stop-color="#374c69" stop-opacity=".65"/><stop offset=".12" stop-color="#fcfaf3" stop-opacity=".8"/><stop offset=".25" stop-color="#374c69" stop-opacity=".55"/><stop offset=".8" stop-color="#374c69" stop-opacity=".8"/><stop offset=".95" stop-color="#f8f2dc" stop-opacity=".75"/><stop offset="1" stop-color="#374c69"/></linearGradient>
+    <linearGradient id="cap"><stop stop-color="#242820"/><stop offset=".45" stop-color="#555548"/><stop offset="1" stop-color="#22251e"/></linearGradient>
+    <filter id="shadow"><feGaussianBlur stdDeviation="15"/></filter>
+  </defs>
+  <rect width="800" height="960" fill="url(#bg)"/>
+  
+  <ellipse cx="438" cy="667" rx="165" ry="24" fill="#49483b" opacity=".19" filter="url(#shadow)"/>
+  <g transform="rotate(8 400 480)">
+    <rect x="348" y="286" width="104" height="82" rx="4" fill="url(#cap)"/>
+    <rect x="355" y="363" width="90" height="18" fill="#b5a27d"/>
+    <rect x="275" y="375" width="250" height="280" rx="15" fill="url(#glass)" stroke="#c6c5b7" stroke-width="2"/>
+    <rect x="285" y="385" width="230" height="259" rx="10" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2"/>
+    <path d="M294 411v190" stroke="#fff" opacity=".6" stroke-width="5"/>
+    <rect x="299" y="460" width="202" height="145" fill="#faf8f0" stroke="#ded9cc"/>
+    <text x="400" y="492" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" letter-spacing="2" fill="#585b4f">FRAGRANCE STUDY</text>
+    <text x="400" y="524" text-anchor="middle" font-family="Georgia,serif" font-size="21" fill="#34392e">Velvet</text><text x="400" y="547" text-anchor="middle" font-family="Georgia,serif" font-size="21" fill="#34392e">Meridian</text>
+    <path d="M384 579h32" stroke="#b6ad92"/>
+  </g>
+</svg>
