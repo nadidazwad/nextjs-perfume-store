@@ -120,3 +120,31 @@ test("with DEMO_MODE off, the demo actions refuse before touching anything", asy
   }
   assert.equal(await users(), before);
 });
+
+test("DEMO_MODE forces order alerts to the console, whatever NOTIFY_ADAPTER says", () => {
+  const script = `
+    globalThis.fetch = async () => { console.log("FETCHED"); return new Response("{\\"ok\\":true}"); };
+    require("./src/lib/notify").notifyTestPing().then((ok) => console.log("SENT", ok));`;
+  const run = (demo: string) =>
+    spawnSync(process.execPath, ["--import", "tsx", "-e", script], {
+      cwd: project,
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH, NODE_ENV: "test", DEMO_MODE: demo, DATABASE_URL: "postgres://u:p@localhost:1/db",
+        NOTIFY_ADAPTER: "telegram", TELEGRAM_BOT_TOKEN: "t", TELEGRAM_CHAT_ID: "c",
+      },
+    }).stdout;
+  assert.match(run("false"), /FETCHED[\s\S]*SENT true/);
+  const demo = run("true");
+  assert.doesNotMatch(demo, /FETCHED/);
+  assert.match(demo, /SENT true/);
+});
+
+test("with DEMO_MODE off, suggest stays CDN-cacheable and links carry no ugc rel", async () => {
+  const { GET } = await import("../src/app/api/search/suggest/route");
+  const { NextRequest } = await import("next/server");
+  const response = await GET(new NextRequest("http://localhost/api/search/suggest?q=fixture"));
+  assert.match(response.headers.get("cache-control") ?? "", /^public, .*s-maxage/);
+  const { ugcRel } = await import("../src/lib/demo/links");
+  assert.equal(ugcRel("https://example.com"), undefined);
+});

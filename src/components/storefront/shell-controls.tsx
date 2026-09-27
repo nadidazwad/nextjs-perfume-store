@@ -104,7 +104,7 @@ export function HeaderActions() {
 export function Announcement({
   messages,
 }: {
-  messages: { title: string | null; href: string | null }[];
+  messages: { title: string | null; href: string | null; rel?: string }[];
 }) {
   const announcementRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0),
@@ -134,7 +134,13 @@ export function Announcement({
   return (
     <div className="announcement" ref={announcementRef}>
       <div key={index} className="announcement-text">
-        {message.href ? <Link href={message.href}>{message.title}</Link> : message.title}
+        {message.href ? (
+          <Link href={message.href} rel={message.rel}>
+            {message.title}
+          </Link>
+        ) : (
+          message.title
+        )}
       </div>
       <button
         className="announcement-close"

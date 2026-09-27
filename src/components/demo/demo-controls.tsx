@@ -2,7 +2,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { endDemo, resetDemo, startDemo, type DemoStart } from "@/lib/demo/actions";
+import { endDemo, resetDemo, resumeDemo, startDemo, type DemoStart } from "@/lib/demo/actions";
 
 /** "1 h 42 m", "12 m", or null once expired. Starts from the server's clock so hydration matches. */
 function useTimeLeft(expiresAt: string, renderedAt: number) {
@@ -194,5 +194,36 @@ export function DemoStartButton() {
         </p>
       )}
     </div>
+  );
+}
+
+/** /demo/resume: re-attach this signed-in demo session to its sandbox, then open the admin. */
+export function ResumeDemo() {
+  const router = useRouter();
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    resumeDemo().then((result) => {
+      if (cancelled) return;
+      if (result.ok) {
+        router.replace("/admin");
+        router.refresh();
+      } else setMessage(result.message);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+  return message ? (
+    <div className="demo-start">
+      <p className="callout">{message}</p>
+      <Link className="button primary" href="/demo">
+        Start a new demo store
+      </Link>
+    </div>
+  ) : (
+    <p className="muted" role="status">
+      Opening your demo store…
+    </p>
   );
 }

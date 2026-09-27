@@ -4,6 +4,7 @@ import { getStorage } from "@/lib/storage";
 import { MAX_UPLOAD_BYTES, validateImage } from "@/lib/storage/image";
 import { takeRateLimit } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
+import { putSandboxUpload, SandboxUploadError } from "@/lib/demo/uploads";
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   const session = await adminSession(request.headers);
@@ -54,10 +55,13 @@ export async function POST(request: Request) {
       new Uint8Array(await file.arrayBuffer()),
       file.type,
     );
+    // Demo visitors (DEMO_MODE) upload into their own sandbox, never to storage.
+    if (env.DEMO_MODE && session.user.role === "demo") return Response.json(await putSandboxUpload(bytes));
     const key = `${randomUUID()}.webp`;
     const url = await getStorage().putObject(bytes, key);
     return Response.json({ url, key });
-  } catch {
+  } catch (error) {
+    if (error instanceof SandboxUploadError) return Response.json({ error: error.message }, { status: 400 });
     return Response.json(
       {
         error:

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ugcRel } from "@/lib/demo/links";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -46,7 +47,7 @@ async function HomeSection({ section: s }: { section: Section }) {
                 {b.subtitle && <p>{b.subtitle}</p>}
                 <div className="hero-actions">
                   {b.href && (
-                    <Link className="button primary lg" href={b.href}>
+                    <Link className="button primary lg" href={b.href} rel={ugcRel(b.href)}>
                       {b.ctaLabel ?? "Shop now"} <ArrowRight size={18} aria-hidden />
                     </Link>
                   )}
@@ -95,7 +96,7 @@ async function HomeSection({ section: s }: { section: Section }) {
         <SectionHead title={s.title ?? "Shop by category"} description={s.subtitle} />
         <div className="category-grid">
           {s.config.tiles?.map((tile) => (
-            <Link key={tile.href} href={tile.href} className="category-tile">
+            <Link key={tile.href} href={tile.href} rel={ugcRel(tile.href)} className="category-tile">
               <Media src={tile.imageUrl} alt="" sizes="(max-width: 700px) 50vw, 25vw" />
               <span className="category-tile-label">
                 {tile.title}
@@ -171,7 +172,7 @@ async function HomeSection({ section: s }: { section: Section }) {
         <SectionHead title={s.title ?? "Sales & events"} description={s.subtitle} />
         <div className="event-grid">
           {events.map((b) => (
-            <Link key={b.id} href={b.href ?? "/products"} className="event-card">
+            <Link key={b.id} href={b.href ?? "/products"} rel={ugcRel(b.href)} className="event-card">
               <Media src={b.imageUrl} alt="" sizes="(max-width: 700px) 100vw, 50vw" />
               <span className="event-card-copy">
                 <strong>{b.title}</strong>

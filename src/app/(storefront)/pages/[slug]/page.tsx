@@ -1,4 +1,5 @@
 import { Breadcrumbs } from "@/components/storefront/ui";
+import { env } from "@/lib/env";
 import { notFound } from "next/navigation";
 import { getStaticPage } from "@/lib/catalog/content";
 import { pageMetadata } from "@/lib/seo";
@@ -21,7 +22,7 @@ export default async function StaticPage({ params }: Props) {
     <article className="store-width static-page">
       <Breadcrumbs items={[["Home", "/"], [p.title]]} />
       <h1>{p.title}</h1>
-      <Markdown body={p.body.replace(/^# [^\n]+\n*/, "")} />
+      <Markdown body={p.body.replace(/^# [^\n]+\n*/, "")} ugc={env.DEMO_MODE} />
     </article>
   );
 }

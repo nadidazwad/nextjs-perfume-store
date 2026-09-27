@@ -2,11 +2,11 @@
 import { randomBytes } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { getSessionCookie, parseSetCookieHeader } from "better-auth/cookies";
 import { publicDb } from "@/db";
-import { account, user } from "@/db/schema";
+import { account, demoSandboxes, user } from "@/db/schema";
 import { getAuth } from "@/lib/auth";
 import { authSecret, env } from "@/lib/env";
 import { createId } from "@/lib/id";
@@ -18,7 +18,7 @@ import { requestSandbox, setSandboxCookie } from "./session";
 /**
  * The public demo's only entry points (DEMO_MODE). None takes arguments. Start
  * is rate limited per IP; reset and end act only on the sandbox the caller's
- * own session-bound cookie routes to.
+ * own session-bound cookie routes to; resume only on the signed-in demo user's.
  */
 export type DemoStart =
   | { ok: true; email: string; password: string; expiresAt: string }
@@ -98,4 +98,24 @@ export async function endDemo(): Promise<Result> {
       jar.set(name, "", { path: "/", expires: new Date(0), secure: name.startsWith("__Secure-") || undefined });
   revalidatePath("/", "layout");
   return { ok: true, message: "Your demo sandbox has been deleted." };
+}
+
+/**
+ * Signed in with the demo login elsewhere (another device, or after signing
+ * out): the session has no sandbox cookie yet. Issue it for the visitor's own
+ * live sandbox, bound to this session. /demo/resume calls this.
+ */
+export async function resumeDemo(): Promise<Result> {
+  if (!env.DEMO_MODE) return unavailable;
+  const source = await headers();
+  const session = await getAuth().api.getSession({ headers: source });
+  const token = getSessionCookie(source);
+  if (session?.user.role !== "demo" || !token) return { ok: false, message: "Sign in with your demo login first." };
+  const [sandbox] = await publicDb
+    .select()
+    .from(demoSandboxes)
+    .where(and(eq(demoSandboxes.userId, session.user.id), gt(demoSandboxes.expiresAt, new Date())));
+  if (!sandbox) return { ok: false, message: "This demo store has ended and was deleted." };
+  setSandboxCookie(await cookies(), authSecret(), sandbox.id, sandbox.expiresAt, token);
+  return { ok: true, message: "" };
 }

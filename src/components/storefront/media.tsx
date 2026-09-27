@@ -24,7 +24,8 @@ export function Media({
           // recommended LCP treatment and survives viewport-dependent LCPs.
           loading={priority ? "eager" : undefined}
           fetchPriority={priority ? "high" : undefined}
-          unoptimized={src.endsWith(".svg") || src.startsWith("http")}
+          // Demo sandbox uploads (sbx-…) exist only for the visitor's own requests.
+          unoptimized={src.endsWith(".svg") || src.startsWith("http") || src.startsWith("/uploads/sbx-")}
         />
       ) : (
         <span className="media-fallback">Image unavailable</span>

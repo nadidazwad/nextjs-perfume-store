@@ -30,6 +30,7 @@ let session: typeof import("../src/lib/admin/session");
 let creation: typeof import("../src/lib/checkout/create-order");
 let transitions: typeof import("../src/lib/orders/transitions");
 let limits: typeof import("../src/lib/rate-limit");
+let uploads: typeof import("../src/lib/demo/uploads");
 let raw: postgres.Sql;
 
 before(async () => {
@@ -53,6 +54,7 @@ before(async () => {
   creation = await import("../src/lib/checkout/create-order");
   transitions = await import("../src/lib/orders/transitions");
   limits = await import("../src/lib/rate-limit");
+  uploads = await import("../src/lib/demo/uploads");
   raw = postgres(url.toString(), { max: 2, onnotice: () => {} });
   await migrate(database.publicDb, { migrationsFolder: join(project, "src/db/migrations") });
   // A small store touching every kind of copied data.
@@ -342,4 +344,51 @@ test("the live-sandbox cap evicts expired sandboxes first, then the oldest", { s
   const schemas = await raw`select nspname from pg_namespace where nspname like 'demo\\_%' order by nspname`;
   assert.deepEqual(schemas.map((row) => row.nspname).sort(), [second.schema, fourth.schema].sort());
   await lifecycle.dropSandboxes([second.id, fourth.id]);
+});
+
+test("sandbox uploads stay in their sandbox, are capped, and never land in public", { skip }, async () => {
+  await fresh();
+  const a = await lifecycle.createSandbox("demo-a");
+  const b = await lifecycle.createSandbox("demo-b");
+  const asA = visitor("token-a.sig", signSandboxCookie(secret, a.id, a.expiresAt, "token-a.sig"));
+  const asB = visitor("token-b.sig", signSandboxCookie(secret, b.id, b.expiresAt, "token-b.sig"));
+  const image = new Uint8Array([82, 73, 70, 70, 1, 2, 3]);
+  const { key, url } = await as(asA, () => uploads.putSandboxUpload(image));
+  assert.match(key, /^sbx-/);
+  assert.equal(url, `/uploads/${key}`);
+  assert.deepEqual([...(await as(asA, () => uploads.getSandboxUpload(key)))!], [...image]);
+  assert.equal(await as(asB, () => uploads.getSandboxUpload(key)), null);
+  assert.equal(await as(null, () => uploads.getSandboxUpload(key)), null);
+  // The route: private for the owner, 404 for everyone else.
+  const route = await import("../src/app/uploads/[key]/route");
+  const get = (headers: Headers | null) => as(headers, () => route.GET(new Request(`http://localhost${url}`), { params: Promise.resolve({ key }) }));
+  const own = await get(asA);
+  assert.equal(own.status, 200);
+  assert.equal(own.headers.get("cache-control"), "private, max-age=86400");
+  assert.equal((await get(asB)).status, 404);
+  assert.equal((await get(null)).status, 404);
+  // Outside a sandbox the write is refused, even if a caller forgot to check.
+  await assert.rejects(as(null, () => uploads.putSandboxUpload(image)), /Not in a demo sandbox/);
+  assert.equal((await raw`select count(*)::int as n from public.sandbox_uploads`)[0].n, 0);
+  for (let i = 1; i < uploads.SANDBOX_UPLOAD_LIMIT; i++) await as(asA, () => uploads.putSandboxUpload(image));
+  await assert.rejects(as(asA, () => uploads.putSandboxUpload(image)), /keeps up to/);
+});
+
+test("in demo mode, suggest responses are never shareable and outbound links are marked ugc", { skip }, async () => {
+  await fresh();
+  const box = await lifecycle.createSandbox("demo-a");
+  const headers = visitor("token-a.sig", signSandboxCookie(secret, box.id, box.expiresAt, "token-a.sig"));
+  await as(headers, () => database.db.update(s.products).set({ name: "Sandbox Only Name" }).where(eq(s.products.id, "product")));
+  const { GET } = await import("../src/app/api/search/suggest/route");
+  const { NextRequest } = await import("next/server");
+  const ask = (h: Headers | null) => as(h, () => GET(new NextRequest("http://localhost/api/search/suggest?q=sandbox%20only")));
+  const mine = await ask(headers);
+  assert.equal(mine.headers.get("cache-control"), "private, no-store");
+  assert.match(JSON.stringify(await mine.json()), /Sandbox Only Name/);
+  const theirs = await ask(null);
+  assert.equal(theirs.headers.get("cache-control"), "private, no-store");
+  assert.doesNotMatch(JSON.stringify(await theirs.json()), /Sandbox Only Name/);
+  const { ugcRel } = await import("../src/lib/demo/links");
+  assert.equal(ugcRel("https://example.com/x"), "nofollow ugc");
+  assert.equal(ugcRel("/products"), undefined);
 });

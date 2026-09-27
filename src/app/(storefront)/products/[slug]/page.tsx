@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { env } from "@/lib/env";
 import { notFound } from "next/navigation";
 import { getProduct, queryCatalog } from "@/lib/catalog/query";
 import {
@@ -121,7 +122,7 @@ export default async function Product({ params, searchParams }: Props) {
       <div className="product-info">
         <section className="panel product-about">
           <h2>About this fragrance</h2>
-          <Markdown body={p.description.replace(/^##? [^\n]+\n*/, "")} />
+          <Markdown body={p.description.replace(/^##? [^\n]+\n*/, "")} ugc={env.DEMO_MODE} />
         </section>
         {p.notes.length > 0 && (
           <section className="panel">

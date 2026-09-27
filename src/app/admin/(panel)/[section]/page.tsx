@@ -200,9 +200,13 @@ export default async function Section({
           <div className="admin-stack">
             <Panel
               title="Test notifications"
-              description={`Sends a test message through the ${env.NOTIFY_ADAPTER} adapter.`}
+              description={
+                env.DEMO_MODE
+                  ? "Turned off in the demo: order alerts only reach the server log."
+                  : `Sends a test message through the ${env.NOTIFY_ADAPTER} adapter.`
+              }
             >
-              <TestNotification />
+              {!env.DEMO_MODE && <TestNotification />}
             </Panel>
             <Panel title="Storage check">
               <p className="admin-muted">

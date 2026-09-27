@@ -29,6 +29,13 @@
       "when": 1790483859793,
       "tag": "0003_demo_sandboxes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790485236280,
+      "tag": "0004_sandbox_uploads",
+      "breakpoints": true
     }
   ]
 }

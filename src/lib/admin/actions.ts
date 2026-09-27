@@ -17,6 +17,7 @@ import {
 import { saveProductRecord } from "./catalog";
 import { transitionOrder } from "@/lib/orders/transitions";
 import { notifyTestPing } from "@/lib/notify";
+import { env } from "@/lib/env";
 import { hasDeliveredPurchase } from "@/lib/reviews/server";
 import { storeConfig } from "../../../store.config";
 const tables = {
@@ -335,6 +336,7 @@ export async function updateOrder(
 }
 export async function testNotification(): Promise<ActionResult> {
   await requireAdmin();
+  if (env.DEMO_MODE) return { ok: false, message: "Test notifications are turned off in the demo." };
   const ok = await notifyTestPing();
   return {
     ok,

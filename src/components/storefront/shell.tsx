@@ -13,6 +13,7 @@ import {
   SearchForm,
 } from "./shell-controls";
 import { Media } from "./media";
+import { ugcRel } from "@/lib/demo/links";
 export const whatsappHref = config.contact.whatsapp
   ? `https://wa.me/${config.contact.whatsapp.replace(/\D/g, "")}`
   : null;
@@ -53,7 +54,11 @@ export async function StoreHeader() {
         Skip to content
       </a>
       {config.announcementBar.enabled && (
-        <Announcement messages={banners.filter((b) => b.placement === "announcement")} />
+        <Announcement
+          messages={banners
+            .filter((b) => b.placement === "announcement")
+            .map((b) => ({ title: b.title, href: b.href, rel: ugcRel(b.href) }))}
+        />
       )}
       <span className="header-scroll-sentinel" aria-hidden />
       <header className="store-header">

@@ -12,7 +12,8 @@ const adapters = {
 };
 async function send(subject: string, text: string) {
   try {
-    await adapters[env.NOTIFY_ADAPTER].send(subject, text);
+    // The public demo never messages anyone: visitors' orders only reach the (redacted) log.
+    await adapters[env.DEMO_MODE ? "console" : env.NOTIFY_ADAPTER].send(subject, text);
     return true;
   } catch {
     // Do not log provider errors: they can contain credentials or response payloads.

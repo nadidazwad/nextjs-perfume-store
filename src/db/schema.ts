@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { boolean, check, index, integer, jsonb, pgEnum, pgSequence, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, check, customType, index, integer, jsonb, pgEnum, pgSequence, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { createId } from "../lib/id";
 
 const id = () => text("id").primaryKey().$defaultFn(createId);
@@ -192,6 +192,17 @@ export const demoSandboxes = pgTable("demo_sandboxes", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("demo_sandboxes_expires_idx").on(t.expiresAt), check("demo_sandboxes_id_check", sql`${t.id} ~ '^[a-z0-9]{16}$'`)]);
 
+const bytea = customType<{ data: Uint8Array; driverData: Uint8Array }>({ dataType: () => "bytea" });
+/**
+ * Images a demo visitor uploads, stored inside their sandbox and served by
+ * /uploads/[key], so no bucket is needed and nothing outlives the sandbox.
+ * Always empty in public.
+ */
+export const sandboxUploads = pgTable("sandbox_uploads", {
+  key: text("key").primaryKey(), bytes: bytea("bytes").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [check("sandbox_uploads_key_check", sql`${t.key} ~ '^sbx-[a-zA-Z0-9-]+[.]webp$'`)]);
+
 /**
  * Which tables a demo sandbox copies. Store data is copied; auth, rate limits
  * and the sandbox registry stay in `public` only. tests/sandbox.test.ts fails
@@ -199,7 +210,7 @@ export const demoSandboxes = pgTable("demo_sandboxes", {
  */
 export const sandboxTables = [
   brands, collections, notes, products, productNotes, productVariants, productImages, customers, orders, orderItems,
-  orderEvents, banners, homepageSections, staticPages, settings, coupons, reviews,
+  orderEvents, banners, homepageSections, staticPages, settings, coupons, reviews, sandboxUploads,
 ] as const;
 export const publicOnlyTables = [user, session, account, verification, rateLimits, demoSandboxes] as const;
 /** Sequences a sandbox gets its own copy of. */
