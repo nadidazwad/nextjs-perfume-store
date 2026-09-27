@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+**Public demo with a sandboxed admin** (`DEMO_MODE`, off by default): on a
+showcase deployment, any visitor can open `/demo` and get a private copy of
+the store for 2 hours (a Postgres schema per visitor, up to 50 at once), with
+a demo admin login that also works from another device. Edits, orders and
+uploads are visible only to that visitor; Reset and End are one click; expired
+copies are removed automatically. Real stores are unaffected.
+See `docs/deploy/public-demo.md`.
+
 ## v0.1.0 (2026-09-27)
 
 The first public release.

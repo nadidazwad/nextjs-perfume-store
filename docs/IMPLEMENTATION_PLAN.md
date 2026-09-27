@@ -156,7 +156,8 @@ take a real order, following README alone, spending ৳0.
 ## Phase 7 — Public demo with sandboxed admin
 
 **Covers:** a public showcase deployment where visitors can use the real admin
-panel without changing what anyone else sees. Not started; plan only.
+panel without changing what anyone else sees. **Done 2026-09-27** and live;
+decisions, deviations and evidence in `docs/PHASE_7_VERIFICATION.md`.
 
 **Goal:** a visitor clicks "Try the admin", gets a private copy of the demo
 store that expires on its own, and can edit products, confirm orders, change

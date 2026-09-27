@@ -102,3 +102,20 @@ Every screen of the demo store, captured from a production build with the demo s
 </tr></table>
 
 <table><tr><td><img src="screenshots/admin/mobile-order-detail.webp" alt="Order detail on a phone" width="220"><br><sub>Order detail on a phone</sub></td></tr></table>
+
+## Public demo (`DEMO_MODE`)
+
+Only on a showcase deployment ([public-demo.md](deploy/public-demo.md)): each
+visitor gets a private, expiring copy of the store and the admin. Captured
+from the live demo.
+
+<table><tr>
+<td width="50%"><img src="screenshots/demo/start.webp" alt="Try the admin: start a private demo store"><br><sub>Try the admin: one click starts a private demo store</sub></td>
+<td width="50%"><img src="screenshots/demo/admin.webp" alt="The admin in a demo store, with its expiry, Reset and End"><br><sub>The admin in a demo store: expiry, Reset and End</sub></td>
+</tr></table>
+
+<table><tr>
+<td><img src="screenshots/demo/mobile-credentials.webp" alt="The generated demo login on a phone" width="220"><br><sub>The demo login, for another device</sub></td>
+<td><img src="screenshots/demo/mobile-storefront.webp" alt="The storefront inside a demo store on a phone" width="220"><br><sub>The storefront shows the visitor's own changes</sub></td>
+</tr></table>
+

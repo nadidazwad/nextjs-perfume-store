@@ -11,8 +11,10 @@ zones and payment methods all live in one config file.
 [![CI](https://github.com/nadidazwad/nextjs-perfume-store/actions/workflows/ci.yml/badge.svg)](https://github.com/nadidazwad/nextjs-perfume-store/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**[Live demo →](https://nextjs-perfume-store.vercel.app)** (fictional store: browse, filter, and
-place a test order). Hands-on admin access for visitors is coming next.
+**[Live demo →](https://nextjs-perfume-store.vercel.app)** (fictional store) ·
+**[Try the admin →](https://nextjs-perfume-store.vercel.app/demo)**: one click gives you a
+private copy of the store for 2 hours. Edit products, confirm and ship orders, rearrange the
+homepage and place orders; nobody else sees your changes.
 
 ![Storefront home page](docs/screenshots/storefront/home.webp)
 
@@ -67,7 +69,7 @@ place a test order). Hands-on admin access for visitors is coming next.
 <td><img src="docs/screenshots/admin/mobile-order-detail.webp" alt="Admin order on a phone" width="200"></td>
 </tr></table>
 
-**[See all 34 screenshots →](docs/SCREENSHOTS.md)**
+**[See all 38 screenshots →](docs/SCREENSHOTS.md)**
 
 ## Try it locally (no accounts needed)
 
@@ -106,6 +108,10 @@ Your catalog, homepage, banners and pages are managed in the admin panel.
 |---|---|---|---|
 | **Vercel + Neon** | ৳0 | trying it, demos, a store you're setting up | [docs/deploy/vercel-neon.md](docs/deploy/vercel-neon.md) |
 | **Docker** on your own server or a free VM | ৳0 on a free VM | a live business | [docs/deploy/docker.md](docs/deploy/docker.md) |
+
+Running your own showcase? [docs/deploy/public-demo.md](docs/deploy/public-demo.md)
+turns a deployment into a public demo where every visitor gets a private,
+expiring admin sandbox (`DEMO_MODE`; never on a real store).
 
 > [!WARNING]
 > Vercel's free Hobby plan is licensed for **non-commercial use only**. Use it
