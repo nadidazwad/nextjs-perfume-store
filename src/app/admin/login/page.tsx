@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { adminSession } from "@/lib/admin/session";
+import { env } from "@/lib/env";
 import { LoginForm } from "@/components/admin/auth-controls";
 import { storeConfig } from "../../../../store.config";
 export default async function Login() {
@@ -36,6 +37,11 @@ export default async function Login() {
             Sign in to confirm today&apos;s orders and manage your catalog.
           </p>
           <LoginForm />
+          {env.DEMO_MODE && (
+            <p className="admin-muted admin-login-demo">
+              Just looking? <Link href="/demo">Try the admin in your own demo store</Link>.
+            </p>
+          )}
         </div>
       </section>
     </main>

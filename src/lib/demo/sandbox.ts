@@ -121,12 +121,38 @@ export async function dropSandboxes(ids: string[]) {
   await Promise.all(ids.map(closeSandboxClient));
 }
 
-/** Removes every expired sandbox and its demo user. Returns the removed ids. */
+/** "Reset": a fresh copy of the store for the same visitor, keeping their expiry and place in the queue. */
+export async function resetSandbox(id: string, userId: string) {
+  const next = newSandboxId();
+  const expiresAt = await publicSql().begin(async (tx) => {
+    await tx`select pg_advisory_xact_lock(${LOCK})`;
+    const [row] = await tx<{ expires: string; created: string }[]>`
+      select expires_at::text as expires, created_at::text as created from public.demo_sandboxes
+      where id = ${id} and user_id = ${userId} and expires_at > now()`;
+    if (!row) throw new Error("This demo sandbox has ended.");
+    await tx.unsafe(`drop schema if exists ${quote(sandboxSchema(id))} cascade`);
+    await tx`delete from public.demo_sandboxes where id = ${id}`;
+    await tx.unsafe(await cloneScript(tx, sandboxSchema(next))).simple();
+    await tx`insert into public.demo_sandboxes (id, user_id, expires_at, created_at)
+      values (${next}, ${userId}, ${row.expires}::timestamptz, ${row.created}::timestamptz)`;
+    return new Date(row.expires);
+  });
+  await closeSandboxClient(id);
+  return { id: next, schema: sandboxSchema(next), expiresAt };
+}
+
+/**
+ * Removes every expired sandbox and its demo user, plus demo users left without
+ * a sandbox (a start that failed halfway). Returns the removed sandbox ids.
+ */
 export async function dropExpiredSandboxes(now = new Date()) {
   const removed = await publicSql().begin(async (tx) => {
     await tx`select pg_advisory_xact_lock(${LOCK})`;
     const rows = await tx<{ id: string }[]>`select id from public.demo_sandboxes where expires_at <= ${now.toISOString()}::timestamptz`;
     await dropInside(tx, rows.map((row) => row.id));
+    await tx`delete from public."user" u where u.role = 'demo'
+      and u.created_at < ${now.toISOString()}::timestamptz - interval '10 minutes'
+      and not exists (select 1 from public.demo_sandboxes d where d.user_id = u.id)`;
     return rows.map((row) => row.id);
   });
   await Promise.all(removed.map(closeSandboxClient));

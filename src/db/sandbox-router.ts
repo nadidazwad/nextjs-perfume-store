@@ -37,6 +37,21 @@ export async function currentSandboxId(headers?: Headers | null) {
   return verifySandboxCookie(authSecret(), readCookie(source.get("cookie"), SANDBOX_COOKIE), getSessionCookie(source));
 }
 
+// Whether a sandbox is still in the registry, cached briefly per instance: an
+// ended sandbox's visitor becomes an anonymous shopper. (A registered sandbox
+// whose schema is gone still fails closed below.)
+const LIVE_TTL_MS = 5_000;
+const liveness = new Map<string, { live: boolean; until: number }>();
+async function isLive(shared: Sql, id: string) {
+  const now = Date.now();
+  const cached = liveness.get(id);
+  if (cached && cached.until > now) return cached.live;
+  const rows = await shared`select 1 from public.demo_sandboxes where id = ${id} and expires_at > now()`;
+  if (liveness.size >= 1000) liveness.clear();
+  liveness.set(id, { live: rows.length > 0, until: now + LIVE_TTL_MS });
+  return rows.length > 0;
+}
+
 // One connection per sandbox, least recently used closed first. The search_path
 // is the sandbox schema alone: once a sandbox is dropped its queries fail
 // instead of falling through to the public store tables. It is passed as
@@ -83,6 +98,7 @@ function sandboxClient(id: string, parsers: object, serializers: object) {
 
 /** Close a dropped sandbox's connection on this instance. */
 export async function closeSandboxClient(id: string) {
+  liveness.delete(id);
   const entry = clients.get(id);
   clients.delete(id);
   await entry?.client.end({ timeout: 5 });
@@ -90,6 +106,7 @@ export async function closeSandboxClient(id: string) {
 export async function closeSandboxClients() {
   const all = [...clients.values()];
   clients.clear();
+  liveness.clear();
   await Promise.all(all.map((entry) => entry.client.end({ timeout: 5 })));
 }
 
@@ -97,7 +114,7 @@ export function createRoutingClient(shared: Sql): Sql {
   const options = { parsers: {}, serializers: {} };
   const pick = async () => {
     const id = await currentSandboxId();
-    if (!id) return shared;
+    if (!id || !(await isLive(shared, id))) return shared;
     const entry = sandboxClient(id, options.parsers, options.serializers);
     await entry.ready;
     return entry.client;

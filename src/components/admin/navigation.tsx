@@ -67,12 +67,15 @@ export function AdminShell({
   pending,
   pendingReviews = 0,
   user,
+  banner,
   children,
 }: {
   storeName: string;
   pending: number;
   pendingReviews?: number;
-  user: { name: string; email: string };
+  user: { name: string; email: string; role?: string };
+  /** Public demo status bar (DEMO_MODE only). */
+  banner?: ReactNode;
   children: ReactNode;
 }) {
   const path = usePathname();
@@ -183,6 +186,7 @@ export function AdminShell({
         onClick={() => setOpen(false)}
       />
       <div className="admin-frame">
+        {banner}
         <header className="admin-topbar">
           <button
             type="button"
@@ -238,7 +242,7 @@ export function AdminShell({
                 </span>
                 <span className="admin-user-meta">
                   <strong>{user.name || "Admin"}</strong>
-                  <small>Store administrator</small>
+                  <small>{user.role === "demo" ? "Demo store" : "Store administrator"}</small>
                 </span>
               </summary>
               <div className="admin-user-menu">

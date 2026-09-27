@@ -3994,3 +3994,11 @@ a.admin-kpi:hover .admin-kpi-arrow {
     animation-duration: 1.6s !important;
   }
 }
+.admin-login-demo {
+  margin-top: 8px;
+  font-size: 13.5px;
+}
+.admin-login-demo a {
+  color: var(--ink);
+  text-underline-offset: 3px;
+}

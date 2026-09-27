@@ -1,10 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { and, eq, gt } from "drizzle-orm";
-import { publicDb } from "@/db";
-import { currentSandboxId } from "@/db/sandbox-router";
-import { demoSandboxes } from "@/db/schema";
 import { getAuth } from "@/lib/auth";
+import { requestSandbox } from "@/lib/demo/session";
 import { env } from "@/lib/env";
 export async function adminSession(requestHeaders?: Headers) {
   const source = requestHeaders ?? (await headers());
@@ -12,21 +9,17 @@ export async function adminSession(requestHeaders?: Headers) {
   if (session?.user.role === "admin") return session;
   // A demo visitor (DEMO_MODE only) is let in only while this request is routed
   // to their own live sandbox, so their edits can never reach the real store.
-  if (session?.user.role === "demo" && env.DEMO_MODE && (await routedToOwnSandbox(session.user.id, source)))
+  if (session?.user.role === "demo" && env.DEMO_MODE && (await requestSandbox(source))?.userId === session.user.id)
     return session;
   return null;
 }
-async function routedToOwnSandbox(userId: string, source: Headers) {
-  const id = await currentSandboxId(source);
-  if (!id) return false;
-  const [row] = await publicDb
-    .select({ id: demoSandboxes.id })
-    .from(demoSandboxes)
-    .where(and(eq(demoSandboxes.id, id), eq(demoSandboxes.userId, userId), gt(demoSandboxes.expiresAt, new Date())));
-  return Boolean(row);
-}
 export async function requireAdmin() {
   const session = await adminSession();
-  if (!session) redirect("/admin/login");
-  return session.user;
+  if (session) return session.user;
+  if (env.DEMO_MODE) {
+    // Signed in as a demo visitor without the sandbox cookie (e.g. another device).
+    const visitor = await getAuth().api.getSession({ headers: await headers() });
+    if (visitor?.user.role === "demo") redirect("/demo/resume");
+  }
+  redirect("/admin/login");
 }

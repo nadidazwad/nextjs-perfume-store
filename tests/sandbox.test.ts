@@ -244,12 +244,26 @@ test("a dropped sandbox fails closed instead of falling through to public", { sk
   await lifecycle.dropSandboxes([box.id]);
 });
 
+test("an ended sandbox (unregistered or past its expiry) routes its visitor to the shared store", { skip }, async () => {
+  await fresh();
+  const box = await lifecycle.createSandbox("demo-a");
+  const headers = visitor("token-a.sig", signSandboxCookie(secret, box.id, box.expiresAt, "token-a.sig"));
+  await as(headers, () => database.db.update(s.products).set({ name: "Mine" }).where(eq(s.products.id, "product")));
+  assert.equal(await as(headers, productName), "Mine");
+  await raw`update public.demo_sandboxes set expires_at = now() - interval '1 second' where id = ${box.id}`;
+  await router.closeSandboxClient(box.id); // drops this instance's liveness cache, as cleanup does
+  assert.equal(await as(headers, productName), "Rain Archive");
+  await lifecycle.dropSandboxes([box.id]);
+  assert.equal(await as(headers, productName), "Rain Archive");
+});
+
 test("a sandbox connection that doesn't land in its own schema is refused before any query", { skip }, async () => {
   await fresh();
   const pristine = await publicFingerprint();
-  // A validly signed cookie for a sandbox whose schema doesn't exist: the connection's
+  // A registered, validly signed sandbox whose schema doesn't exist: the connection's
   // effective search_path is empty, as it would be public if a host ignored the setting.
   const ghost = "ghostghostghost2";
+  await raw`insert into public.demo_sandboxes (id, user_id, expires_at) values (${ghost}, 'demo-b', now() + interval '1 minute')`;
   const headers = visitor("token-a.sig", signSandboxCookie(secret, ghost, new Date(Date.now() + 60_000), "token-a.sig"));
   const refused = (error: Error & { cause?: Error }) => /not isolated/.test(`${error.message} ${error.cause?.message}`);
   await assert.rejects(as(headers, productName), refused);

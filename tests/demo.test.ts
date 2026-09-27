@@ -109,3 +109,14 @@ test("sandbox cookies are bound to the session, the secret and the expiry", () =
   assert.throws(() => signSandboxCookie(secret, "Robert'); drop", at, "s"));
   assert.equal(readCookie("a=1; attar_sandbox=%E0%A4%A; b=2", "attar_sandbox"), undefined);
 });
+
+test("with DEMO_MODE off, the demo actions refuse before touching anything", async () => {
+  const actions = await import("../src/lib/demo/actions");
+  const users = async () => (await database.db.select().from(s.user)).length;
+  const before = await users();
+  for (const action of [actions.startDemo, actions.resetDemo, actions.endDemo]) {
+    const result = await action();
+    assert.equal(result.ok, false);
+  }
+  assert.equal(await users(), before);
+});
