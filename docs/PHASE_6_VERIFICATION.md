@@ -196,11 +196,10 @@ deploy guide), schema change (generate + migrate).
 
 ## Known limits
 
-- **External services weren't exercised with real accounts:** Vercel, Neon,
-  Cloudflare R2, Telegram and Resend. Those guides follow each provider's
-  documented flow; the adapters are covered by unit tests with mocked
-  `fetch`, and the S3 adapter by a real SigV4 server. The Vercel + Neon path
-  should be walked end to end when the public demo is deployed (6.6).
+- **Vercel + Neon was walked end to end with real accounts** for the public
+  demo (see below). Cloudflare R2, Telegram and Resend still weren't: those
+  guides follow each provider's documented flow, the adapters are covered by
+  unit tests with mocked `fetch`, and the S3 adapter by a real SigV4 server.
 - **Simulated LCP on Lighthouse's default slow-4G profile is ~2.9–3.0 s.**
   What remains is mostly the React and Next.js runtime. On a 4G profile, LCP
   is 1.1–1.2 s.
@@ -231,12 +230,35 @@ deployed.
 1. ~~Choose the GitHub owner and repository name~~: done,
    `nadidazwad/nextjs-perfume-store`; placeholders replaced.
 2. Optionally put a name in `LICENSE` instead of "Attar contributors".
-3. `git init`, first commit, create the GitHub repository, push `main`.
-4. In the repository settings, enable **Private vulnerability reporting**
-   (`SECURITY.md` and the issue form link to it).
-5. Watch the first CI run.
+3. ~~`git init`, first commit, create the GitHub repository, push `main`~~:
+   done; topics added.
+4. ~~Enable **Private vulnerability reporting**~~: done.
+5. ~~Watch the first CI run~~: both jobs passed on GitHub.
 6. Deploy the public demo with [docs/deploy/vercel-neon.md](deploy/vercel-neon.md),
    place a real order, and add the demo link to the README. Don't publish
    the demo's admin login: sandboxed visitor access to the admin is planned
    as Phase 7 in `docs/IMPLEMENTATION_PLAN.md`.
 7. Tag `v0.1.0` and publish a GitHub release from `CHANGELOG.md`.
+
+## Public demo (2026-09-27)
+
+`https://nextjs-perfume-store.vercel.app`: Vercel Hobby (non-commercial
+showcase) + Neon free plan, AWS US East 1, matching Vercel's default `iad1`
+function region. Deployed from `main` by the Git integration with
+`scripts/vercel-build.sh`.
+
+| Check | Result |
+|---|---|
+| First production build | migrations applied, demo seed + owner admin created, build compiled |
+| `scripts/verify-storefront.mjs` against the live URL | passed (61 sitemap URLs, JSON-LD, 404, robots, OG image, suggest) |
+| Headers | all five security headers plus Vercel's HSTS; `robots.txt` points at the live sitemap |
+| Real order (Gate 6) | placed at 360 px as a customer, found via `/track-order`, opened in the admin with the owner account, cancelled with a reason and timeline note; no page errors |
+| JIT | `jit=off` stored on the database; pooled sessions opened before the migration keep the old value until Neon recycles them |
+
+Found and documented while deploying: Vercel's default function region is
+`iad1`, so the guide now says to keep the database in the same region.
+Running `pnpm db:migrate` from Bangladesh against a US database fails with
+`ETIMEDOUT` after about 750 ms, because Node gives each address only 250 ms.
+The guide gives the `NODE_OPTIONS` fix.
+
+The owner's admin login is private. Visitor admin access is Phase 7.

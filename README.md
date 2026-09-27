@@ -11,6 +11,9 @@ zones and payment methods all live in one config file.
 [![CI](https://github.com/nadidazwad/nextjs-perfume-store/actions/workflows/ci.yml/badge.svg)](https://github.com/nadidazwad/nextjs-perfume-store/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
+**[Live demo →](https://nextjs-perfume-store.vercel.app)** (fictional store: browse, filter, and
+place a test order). Hands-on admin access for visitors is coming next.
+
 ![Storefront home page](docs/screenshots/storefront/home.webp)
 
 ## What you get
