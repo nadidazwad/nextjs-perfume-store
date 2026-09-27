@@ -243,8 +243,13 @@ deployed.
 ## Public demo (2026-09-27)
 
 `https://nextjs-perfume-store.vercel.app`: Vercel Hobby (non-commercial
-showcase) + Neon free plan, AWS US East 1, matching Vercel's default `iad1`
-function region. Deployed from `main` by the Git integration with
+showcase) + Neon free plan. First deployed in AWS US East 1 next to
+Vercel's default `iad1`, then moved to Singapore for the Bangladesh
+audience: function region `sin1` + a new Neon project in
+`ap-southeast-1` (Neon can't move a project, so the redeploy migrated and
+seeded the new database). Server response from Bangladesh went from about
+500–550 ms to a median of 330–380 ms, and the session cookie is
+`__Secure-` prefixed. Deployed from `main` by the Git integration with
 `scripts/vercel-build.sh`.
 
 | Check | Result |
