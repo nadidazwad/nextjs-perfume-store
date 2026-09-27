@@ -183,6 +183,28 @@ export const verification = pgTable("verification", {
   id: id(), identifier: text("identifier").notNull(), value: text("value").notNull(), expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), ...timestamps(),
 }, (t) => [index("verification_identifier_idx").on(t.identifier)]);
 
+/**
+ * Phase 7 public demo (DEMO_MODE only): one row per visitor sandbox, a private
+ * copy of the store tables in schema `demo_<id>`. Always empty on a real store.
+ */
+export const demoSandboxes = pgTable("demo_sandboxes", {
+  id: text("id").primaryKey(), userId: text("user_id").notNull().unique().references(() => user.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("demo_sandboxes_expires_idx").on(t.expiresAt), check("demo_sandboxes_id_check", sql`${t.id} ~ '^[a-z0-9]{16}$'`)]);
+
+/**
+ * Which tables a demo sandbox copies. Store data is copied; auth, rate limits
+ * and the sandbox registry stay in `public` only. tests/sandbox.test.ts fails
+ * if a table is added to this file without being listed in one of the two.
+ */
+export const sandboxTables = [
+  brands, collections, notes, products, productNotes, productVariants, productImages, customers, orders, orderItems,
+  orderEvents, banners, homepageSections, staticPages, settings, coupons, reviews,
+] as const;
+export const publicOnlyTables = [user, session, account, verification, rateLimits, demoSandboxes] as const;
+/** Sequences a sandbox gets its own copy of. */
+export const sandboxSequences = [orderNumberSequence] as const;
+
 export const brandsRelations = relations(brands, ({ many }) => ({ products: many(products) }));
 export const productsRelations = relations(products, ({ one, many }) => ({
   brand: one(brands, { fields: [products.brandId], references: [brands.id] }), variants: many(productVariants), images: many(productImages), notes: many(productNotes), reviews: many(reviews),

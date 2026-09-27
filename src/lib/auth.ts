@@ -1,17 +1,15 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@/db";
+import { publicDb } from "@/db";
 import * as schema from "@/db/schema";
-import { env } from "@/lib/env";
+import { authSecret, env } from "@/lib/env";
 import { authRateLimitStorage } from "@/lib/rate-limit";
 
 function createAuth() {
   return betterAuth({
-    database: drizzleAdapter(db, { provider: "pg", schema }),
+    database: drizzleAdapter(publicDb, { provider: "pg", schema }),
     baseURL: env.NEXT_PUBLIC_APP_URL,
-    secret:
-      env.BETTER_AUTH_SECRET ??
-      "attar-local-development-secret-change-before-deploying",
+    secret: authSecret(),
     emailAndPassword: { enabled: true, disableSignUp: true },
     user: {
       additionalFields: {

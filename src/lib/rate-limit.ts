@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { lt, sql } from "drizzle-orm";
 import type { BetterAuthOptions } from "better-auth";
-import { db, type DbExecutor } from "@/db";
+import { publicDb, type DbExecutor } from "@/db";
 import { rateLimits } from "@/db/schema";
 import { env } from "@/lib/env";
 
@@ -44,7 +44,7 @@ export async function consumeDb(
   limit: number,
   windowMs = WINDOW,
   now = Date.now(),
-  executor: DbExecutor = db,
+  executor: DbExecutor = publicDb,
 ): Promise<Decision> {
   const at = new Date(now);
   const atSql = sql`${at.toISOString()}::timestamptz`;

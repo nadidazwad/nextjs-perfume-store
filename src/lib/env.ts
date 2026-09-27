@@ -23,6 +23,22 @@ const envSchema = z
      * — zero setup, perfect for local development.
      */
     DATABASE_URL: z.string().startsWith("postgres").optional(),
+    /**
+     * Direct (non-pooled) connection string. Only used with DEMO_MODE: each
+     * visitor sandbox gets a tiny connection whose search_path is its schema,
+     * which Neon's pooler doesn't allow. Defaults to DATABASE_URL.
+     */
+    DATABASE_URL_DIRECT: z.string().startsWith("postgres").optional(),
+
+    /**
+     * Public showcase deployments only: visitors get a private, expiring copy
+     * of the store and a demo admin login (docs/deploy/public-demo.md). Never
+     * enable it on a real store.
+     */
+    DEMO_MODE: z
+      .enum(["true", "false", ""])
+      .default("false")
+      .transform((value) => value === "true"),
 
     /** Absolute URL of the deployed site. */
     NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
@@ -84,6 +100,14 @@ const envSchema = z
         fail("NEXT_PUBLIC_APP_URL", "Must use https:// in production so admin cookies are Secure.");
     }
 
+    if (env.DEMO_MODE) {
+      // Sandboxes are Postgres schemas; the embedded PGlite has one connection.
+      if (!env.DATABASE_URL)
+        fail("DEMO_MODE", "DEMO_MODE needs a Postgres DATABASE_URL.");
+      else if (/-pooler\./.test(new URL(env.DATABASE_URL).hostname) && !env.DATABASE_URL_DIRECT)
+        fail("DATABASE_URL_DIRECT", "Required with DEMO_MODE on Neon: the same URL without -pooler.");
+    }
+
     if (env.NOTIFY_ADAPTER === "resend") {
       if (!env.RESEND_API_KEY)
         fail("RESEND_API_KEY", "Required when NOTIFY_ADAPTER=resend");
@@ -125,6 +149,10 @@ function getEnv() {
   }
   return (validated = parsed.data);
 }
+
+/** Signs admin sessions and demo sandbox cookies. The fallback is for local development only. */
+export const authSecret = () =>
+  env.BETTER_AUTH_SECRET ?? "attar-local-development-secret-change-before-deploying";
 
 /** Validate on first use, so a build can compile dynamic routes without production credentials. */
 export const env = new Proxy({} as z.infer<typeof envSchema>, {
