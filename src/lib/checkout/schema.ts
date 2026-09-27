@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { cartSchema } from "@/lib/cart/schema";
 import { storeConfig as config } from "../../../store.config";

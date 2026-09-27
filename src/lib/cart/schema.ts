@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import type { AppliedCoupon } from "@/lib/coupons/rules";
 
 export const cartSchema = z

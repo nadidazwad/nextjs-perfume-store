@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 export { labels, label } from "./labels";
 
 export type SearchParams = Record<string, string | string[] | undefined>;

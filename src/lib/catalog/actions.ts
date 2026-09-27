@@ -1,5 +1,5 @@
 "use server";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { getCardsByIds, type ProductCardData } from "./query";
 import { storeConfig } from "../../../store.config";
 

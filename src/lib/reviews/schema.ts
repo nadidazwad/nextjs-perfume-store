@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 
 /** Pure review helpers shared by the storefront form, the Server Action and tests. */

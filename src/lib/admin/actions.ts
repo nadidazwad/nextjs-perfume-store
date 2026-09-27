@@ -1,7 +1,7 @@
 "use server";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { db } from "@/db";
 import * as s from "@/db/schema";
 import { requireAdmin } from "./session";

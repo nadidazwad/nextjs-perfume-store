@@ -1,5 +1,5 @@
 "use server";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { quoteCart } from "./quote";
 import { checkCoupon } from "@/lib/coupons/server";
 import { COUPON_CODE_MAX } from "@/lib/coupons/rules";
