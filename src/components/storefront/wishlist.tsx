@@ -13,16 +13,19 @@ import {
 import { formatMoney } from "@/lib/money";
 import { ProductCard } from "./product-card";
 import { Media } from "./media";
+import { CountBadge } from "./count-badge";
 import { toggleWishlist, useSavedCards, useSavedIds, writeIds } from "./saved-products";
 
 function GridSkeleton({ count }: { count: number }) {
   return (
     <div className="product-grid" role="status" aria-label="Loading your wishlist">
       {Array.from({ length: Math.min(Math.max(count, 1), 8) }, (_, i) => (
-        <div key={i}>
+        <div key={i} className="card-skeleton">
           <div className="loading-image" />
-          <div className="loading-line" />
-          <div className="loading-line short" />
+          <div className="loading-plate">
+            <div className="loading-line" />
+            <div className="loading-line short" />
+          </div>
         </div>
       ))}
     </div>
@@ -40,7 +43,8 @@ function ClearAll({ onClear }: { onClear: () => void }) {
   return (
     <button
       type="button"
-      className={`button sm${armed ? " primary" : " ghost"}`}
+      className={`button sm clear-all${armed ? " primary" : " ghost"}`}
+      data-armed={armed || undefined}
       onClick={() => (armed ? onClear() : setArmed(true))}
       aria-live="polite"
     >
@@ -108,7 +112,7 @@ export function WishlistSheet() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger className="icon-button" aria-label={`Wishlist, ${ids.length} ${ids.length === 1 ? "item" : "items"}`}>
         <Heart size={18} aria-hidden />
-        {ids.length > 0 && <span className="count">{ids.length}</span>}
+        <CountBadge value={ids.length} hideZero />
       </SheetTrigger>
       <SheetContent className="store-sheet cart-sheet wishlist-sheet" showCloseButton={false}>
         <div className="cart-sheet-heading">

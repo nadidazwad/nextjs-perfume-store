@@ -43,7 +43,11 @@ ask it not to hardcode colours that belong in `store.config.ts`.
 | `.store-dialog` + `.store-dialog-head` | Centered storefront dialog (shadcn `DialogContent` with this class) |
 | `.suggest-panel` | Search autosuggest dropdown; options are `[role=option]` links, `[data-active]` is the keyboard highlight |
 | `.coupon-form`, `.coupon-applied` (`commerce.css`) | Coupon entry / applied state in bag and checkout |
-| `ProductCard` | Every product tile (home carousels, listings, related, wishlist, recently viewed) |
+| `CountBadge` (`storefront/count-badge.tsx`) | Header count bubble; pops when the count goes up from a shopper action, not on hydration |
+| `SuccessMark` (`storefront/ui.tsx`) | Self-drawing tick for rare "it worked" moments (order placed, review sent) |
+| `ProductCard` | Every product tile (home carousels, listings, related, wishlist, recently viewed). A grey panel holding the photo and a white info plate; the name link stretches over the card, the heart and `QuickAdd` sit above it. Stock is only flagged (`.stock-flag`) when it's low or gone |
+| `QuickAdd` (`storefront/quick-add.tsx`) | Card shortcut that adds the shown size; a round button that widens to "Add 50 ml" on hover/focus |
+| Header nav (`storefront/nav.tsx`) | `DesktopNavigation` (grey rail, gliding highlight), `BrandMenu`, `MobileMenu`; the Shop panel is server-rendered in `shell.tsx`. Mega panels are `.nav-panel` > `.nav-card` > `.nav-row` (icon tile + label + hint) |
 
 ## Admin building blocks
 

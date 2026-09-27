@@ -70,6 +70,8 @@ src/
     ui/                      shadcn primitives — do not hand-edit
     storefront/              storefront components (product-card, listing…);
                              ui.tsx = Breadcrumbs, SectionHead, Stars
+                             nav.tsx  header rail, mega menus, phone menu
+                             quick-add.tsx  card "add this size" button
                              search-suggest.tsx  header combobox (ST-08)
                              product-reviews.tsx + review-form.tsx (ST-17)
                              saved-products.ts   localStorage wishlist/recent

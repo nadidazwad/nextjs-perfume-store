@@ -91,23 +91,19 @@
 .delivery-progress {
   font-size: 13px;
 }
-.delivery-progress progress {
-  display: block;
-  width: 100%;
+.delivery-track {
   height: 3px;
   margin-top: 12px;
-  appearance: none;
-  border: 0;
+  overflow: hidden;
+  border-radius: 999px;
   background: var(--border);
 }
-.delivery-progress progress::-webkit-progress-bar {
-  background: var(--border);
-}
-.delivery-progress progress::-webkit-progress-value {
+/* Scaled, not resized, so a quantity change glides without layout work. */
+.delivery-fill {
+  height: 100%;
   background: var(--primary);
-}
-.delivery-progress progress::-moz-progress-bar {
-  background: var(--primary);
+  transform-origin: left;
+  transition: transform 300ms var(--ease-out);
 }
 .cart-sheet[data-slot="sheet-content"] {
   width: min(100%, 490px);
@@ -210,6 +206,10 @@
   border-radius: var(--radius);
   padding: 12px;
   font-size: 16px;
+  transition: border-color 150ms ease;
+}
+.checkout-field :is(input, select, textarea):focus {
+  border-color: var(--sf-ink);
 }
 .checkout-field [aria-invalid="true"] {
   border-color: #a32920;
@@ -290,6 +290,9 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
 }
 .payment-methods label[data-selected="true"] {
   border-color: var(--primary);
@@ -401,6 +404,10 @@
 .tracking-page,
 .confirmation-page {
   max-width: 760px;
+}
+.confirmation-page > .success-mark {
+  display: block;
+  margin-bottom: 14px;
 }
 .tracking-form {
   display: grid;

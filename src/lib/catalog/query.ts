@@ -48,6 +48,8 @@ export type ProductCardData = {
   image: { url: string; alt: string } | null;
   hoverImage: { url: string; alt: string } | null;
   variant: PublicVariant;
+  /** Sizes on offer (within the active filters on listings). */
+  sizes: number;
   hasStock: boolean;
   /** Approved-review aggregate; absent when reviews are off or none exist. */
   rating?: { average: number; count: number };
@@ -273,6 +275,7 @@ export async function queryCatalog(
                     (a.retailPrice - a.price) / (a.retailPrice || 1),
                 )[0]
               : (p.variants.find((v) => v.stockQuantity > 0) ?? p.variants[0]),
+        sizes: p.variants.length,
         hasStock: p.variants.some((v) => v.stockQuantity > 0),
       } satisfies ProductCardData,
     ]),
@@ -325,6 +328,7 @@ export async function getCardsByIds(ids: string[]): Promise<ProductCardData[]> {
           image: p.images[0] ?? null,
           hoverImage: p.images[1] ?? null,
           variant: p.variants.find((v) => v.stockQuantity > 0) ?? p.variants[0],
+          sizes: p.variants.length,
           hasStock: p.variants.some((v) => v.stockQuantity > 0),
           ...(ratings.has(p.id) ? { rating: ratings.get(p.id) } : {}),
         } satisfies ProductCardData,

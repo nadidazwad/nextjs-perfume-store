@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { useCart } from "./cart-provider";
 import { Media } from "./media";
+import { CountBadge } from "./count-badge";
 import { formatMoney } from "@/lib/money";
 import { describeCoupon } from "@/lib/coupons/rules";
 import { storeConfig } from "../../../store.config";
@@ -46,6 +47,7 @@ export function DeliveryProgress() {
   const subtotal = gross - discount;
   const threshold = storeConfig.checkout.freeDeliveryOver;
   if (threshold === null) return null;
+  const reached = Math.min(subtotal, threshold);
   return (
     <div className="delivery-progress">
       <p>
@@ -53,11 +55,20 @@ export function DeliveryProgress() {
           ? "Your order qualifies for free delivery."
           : `${formatMoney(threshold - subtotal)} away from free delivery`}
       </p>
-      <progress
+      <div
+        className="delivery-track"
+        role="progressbar"
         aria-label="Progress toward free delivery"
-        max={threshold}
-        value={Math.min(subtotal, threshold)}
-      />
+        aria-valuemin={0}
+        aria-valuemax={threshold}
+        aria-valuenow={reached}
+        aria-valuetext={formatMoney(reached)}
+      >
+        <div
+          className="delivery-fill"
+          style={{ transform: `scaleX(${threshold > 0 ? reached / threshold : 1})` }}
+        />
+      </div>
     </div>
   );
 }
@@ -301,7 +312,7 @@ export function CartDrawer() {
         aria-label={`Shopping bag, ${cart.count} items`}
       >
         <ShoppingBag size={21} />
-        <span className="count">{cart.count}</span>
+        <CountBadge value={cart.count} ready={cart.ready} />
       </SheetTrigger>
       <SheetContent className="store-sheet cart-sheet" showCloseButton={false}>
         <div className="cart-sheet-heading">

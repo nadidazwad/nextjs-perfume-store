@@ -6,6 +6,7 @@ import { orders } from "@/db/schema";
 import { getPublicOrder } from "@/lib/orders/public-order";
 import { OrderSummary } from "@/components/storefront/order-tracking";
 import { PaymentInstructions } from "@/components/storefront/checkout";
+import { SuccessMark } from "@/components/storefront/ui";
 import { storeConfig as config } from "../../../../../../store.config";
 export const metadata = {
   title: "Order received",
@@ -37,6 +38,7 @@ export default async function Page({
   const order = await getPublicOrder(record.orderNumber, record.customerPhone);
   return (
     <div className="store-width commerce-page confirmation-page">
+      <SuccessMark size={44} />
       <p className="muted">Order received</p>
       <h1>{record.orderNumber}</h1>
       <p className="confirmation-note">{config.checkout.confirmationNote}</p>

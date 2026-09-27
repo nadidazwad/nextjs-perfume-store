@@ -11,7 +11,9 @@ export function WishlistButton({ id, name }: { id: string; name: string }) {
       aria-pressed={saved}
       onClick={() => toggleWishlist(id)}
     >
-      <Heart size={19} weight={saved ? "fill" : "regular"} aria-hidden="true" />
+      {/* Both states stay mounted so CSS can cross-fade them (storefront.css). */}
+      <Heart size={19} className="heart heart-off" aria-hidden="true" />
+      <Heart size={19} weight="fill" className="heart heart-on" aria-hidden="true" />
     </button>
   );
 }

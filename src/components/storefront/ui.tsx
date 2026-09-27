@@ -70,3 +70,24 @@ export function Stars({ value, size = 15, label }: { value: number; size?: numbe
     </span>
   );
 }
+
+/** Success tick for rare "it worked" moments (order placed, review sent). Draws itself; see `.success-mark`. */
+export function SuccessMark({ size = 40 }: { size?: number }) {
+  return (
+    <svg
+      className="success-mark"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" pathLength="1" transform="rotate(-90 12 12)" />
+      <path d="m8 12.5 2.75 2.75L16 9.5" pathLength="1" />
+    </svg>
+  );
+}

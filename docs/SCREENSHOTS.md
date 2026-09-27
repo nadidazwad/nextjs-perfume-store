@@ -9,8 +9,15 @@ Every screen of the demo store, captured from a production build with the demo s
 ![Home page](screenshots/storefront/home.webp)
 
 <table><tr>
-<td width="50%"><img src="screenshots/storefront/home-sections.webp" alt="Homepage sections: value props, categories, carousels"><br><sub>Homepage sections: value props, categories, carousels</sub></td>
+<td width="50%"><img src="screenshots/storefront/home-sections.webp" alt="Product carousel: cards with stock, sizes and quick add"><br><sub>Product cards: stock, sizes and quick add</sub></td>
 <td width="50%"><img src="screenshots/storefront/search-suggest.webp" alt="Search suggestions as you type"><br><sub>Search suggestions as you type</sub></td>
+</tr></table>
+
+### Navigation
+
+<table><tr>
+<td width="50%"><img src="screenshots/storefront/menu-shop.webp" alt="Shop menu: ways to shop, collections and a featured collection"><br><sub>Shop menu: ways to shop, collections, featured collection</sub></td>
+<td width="50%"><img src="screenshots/storefront/menu-brands.webp" alt="Brands menu with a lead fragrance per brand"><br><sub>Brands menu with a lead fragrance per brand</sub></td>
 </tr></table>
 
 ### Catalog

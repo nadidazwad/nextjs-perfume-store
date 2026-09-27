@@ -1,6 +1,6 @@
 "use client";
 import { useId, useState } from "react";
-import { CheckCircle2, PenLine, X } from "lucide-react";
+import { PenLine, X } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { submitReview } from "@/lib/reviews/actions";
+import { SuccessMark } from "./ui";
 // The schema pulls in Zod; load it when the dialog opens, not with the PDP.
 const loadSchema = () => import("@/lib/reviews/schema").then((m) => m.reviewInputSchema);
 
@@ -150,7 +151,7 @@ export function ReviewDialog({ productId, productName }: { productId: string; pr
         </div>
         {done ? (
           <div className="review-done" role="status">
-            <CheckCircle2 size={36} aria-hidden />
+            <SuccessMark size={36} />
             <p>
               <strong>Thanks, {done.name}.</strong> Your review is with our team and will appear once it&apos;s approved,
               usually within a day.
