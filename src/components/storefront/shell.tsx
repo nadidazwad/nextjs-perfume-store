@@ -26,6 +26,8 @@ import {
   type ShopLink,
 } from "./nav";
 import { Media } from "./media";
+import { AppBarBack, AppBarTitle, NavProgress } from "./app-shell";
+import { Suspense } from "react";
 import { ugcRel } from "@/lib/demo/links";
 export const whatsappHref = config.contact.whatsapp
   ? `https://wa.me/${config.contact.whatsapp.replace(/\D/g, "")}`
@@ -44,7 +46,7 @@ function Logo({ className = "store-logo" }: { className?: string }) {
 }
 
 // Values from a "use client" module arrive here as references, so the server panel keeps its own map.
-const shopIcons = {
+export const shopIcons = {
   all: LayoutGrid,
   men: Mars,
   women: Venus,
@@ -52,7 +54,7 @@ const shopIcons = {
   new: Sparkles,
   deals: BadgePercent,
 };
-const shop: ShopLink[] = [
+export const shop: ShopLink[] = [
   { key: "all", name: "All fragrances", href: "/products", hint: "Everything in store" },
   { key: "men", name: "Men", href: "/products?gender=men", hint: "Fragrances for him" },
   { key: "women", name: "Women", href: "/products?gender=women", hint: "Fragrances for her" },
@@ -172,7 +174,10 @@ export async function StoreHeader() {
             collections={collections}
             brands={brands.map(({ id, name, href }) => ({ id, name, href }))}
           />
-          <Logo />
+          {/* Phones: back button + collapsing title (app-shell.tsx). Larger screens: the logo. */}
+          <AppBarBack />
+          <AppBarTitle logo={<Logo />} />
+          <Logo className="store-logo header-logo" />
           <SearchForm className="header-search" />
           <a className="header-call" href={tel}>
             <span className="icon-tile sm">
@@ -184,6 +189,9 @@ export async function StoreHeader() {
             </span>
           </a>
           <HeaderActions />
+          <a className="icon-button appbar-call" href={tel} aria-label={`Call ${config.contact.phone} to order`}>
+            <Phone size={18} aria-hidden />
+          </a>
         </div>
         <DesktopNavigation
           links={railLinks}
@@ -211,6 +219,9 @@ export async function StoreHeader() {
             <BrandMenu brands={brands} />
           </details>
         </DesktopNavigation>
+        <Suspense fallback={null}>
+          <NavProgress />
+        </Suspense>
       </header>
     </>
   );

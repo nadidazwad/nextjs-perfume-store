@@ -2,10 +2,11 @@
 import { useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Select } from "@base-ui/react/select";
-import { Check, ChevronDown, Search, SlidersHorizontal } from "lucide-react";
+import { Check, ChevronDown, LoaderCircle, Search, SlidersHorizontal } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { label } from "@/lib/catalog/labels";
 import { storeConfig } from "../../../store.config";
+import { SheetGrabber } from "./sheet-drag";
 
 type Facets = Record<string, { value: string; label: string; count: number; group?: string }[]>;
 /** Facet groups, in display order. Keys must match catalog URL params. */
@@ -240,6 +241,7 @@ export function MobileFilters({ facets }: { facets: Facets }) {
         {count > 0 && <span className="count-pill">{count}</span>}
       </SheetTrigger>
       <SheetContent side="bottom" className="store-sheet filter-sheet">
+        <SheetGrabber onDismiss={() => setOpen(false)} />
         <SheetTitle>Filters</SheetTitle>
         <SheetDescription className="sr-only">Choose filters, then show the results.</SheetDescription>
         <FilterForm key={`${search}-${open}`} facets={facets} mobile onApplied={() => setOpen(false)} />
@@ -260,6 +262,7 @@ export function SortSelect({ value }: { value: string }) {
   const router = useRouter(),
     pathname = usePathname(),
     params = useSearchParams();
+  const [sorting, startSorting] = useTransition();
   return (
     <Select.Root
       items={sortOptions}
@@ -269,14 +272,14 @@ export function SortSelect({ value }: { value: string }) {
         const next = new URLSearchParams(params);
         next.set("sort", sort);
         next.delete("page");
-        router.push(`${pathname}?${next}`, { scroll: false });
+        startSorting(() => router.push(`${pathname}?${next}`, { scroll: false }));
       }}
     >
-      <Select.Trigger className="sort-select" aria-label="Sort products">
+      <Select.Trigger className="sort-select" aria-label="Sort products" aria-busy={sorting} data-pending={sorting || undefined}>
         <span className="sort-label">Sort</span>
         <Select.Value className="sort-value" />
         <Select.Icon className="sort-icon">
-          <ChevronDown size={15} aria-hidden />
+          {sorting ? <LoaderCircle size={15} className="spin" aria-hidden /> : <ChevronDown size={15} aria-hidden />}
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>

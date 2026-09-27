@@ -49,6 +49,35 @@ ask it not to hardcode colours that belong in `store.config.ts`.
 | `QuickAdd` (`storefront/quick-add.tsx`) | Card shortcut that adds the shown size; a round button that widens to "Add 50 ml" on hover/focus |
 | Header nav (`storefront/nav.tsx`) | `DesktopNavigation` (grey rail, gliding highlight), `BrandMenu`, `MobileMenu`; the Shop panel is server-rendered in `shell.tsx`. Mega panels are `.nav-panel` > `.nav-card` > `.nav-row` (icon tile + label + hint) |
 
+## Phone app shell
+
+On phones (≤760 px) the storefront behaves like a native app. It reuses the
+tokens and building blocks above; the phone-only rules live in
+`src/app/app-shell.css` (its own tokens at the top: bar heights, glass,
+sheet radius, how far the page recedes). Tablets and desktops never see it.
+Keep the breakpoint in step with `PHONE_QUERY` in
+`components/storefront/device.ts`.
+
+| Piece | Where | Notes |
+|---|---|---|
+| `TabBar` | `storefront/app-shell.tsx` | Floating pill. Shop opens the Browse sheet (`menuStore`), Bag opens the bag sheet, Saved only with `features.wishlist`. Hidden on product pages, checkout and order confirmation, which dock their own actions (`hidesTabBar`) |
+| `AppBarBack`, `AppBarTitle` | `storefront/app-shell.tsx`, used in `shell.tsx` | The store logo sits centred on every screen. Back goes through history when it holds one of our pages, otherwise to a parent route; on home the slot offers WhatsApp. Once the page's first `#main h1` scrolls under the bar, its text appears as a small line under the logo, so every page gets it for free |
+| `NavProgress` | `storefront/app-shell.tsx`, in the header | Load bar on the nav bar's bottom edge: starts when an internal link is tapped, completes when the page lands |
+| `SheetGrabber` | `storefront/sheet-drag.tsx` | Put it first in any bottom `SheetContent` with an `onDismiss`. Makes the sheet draggable (momentum-projected dismiss, rubber band at the top) and drives the page recede. Pass `side={phone ? "bottom" : …}` using `usePhone()` |
+| `AddedToast` | `storefront/app-shell.tsx` | Phones don't open the bag on add; `cart.lastAdded` triggers this instead |
+| `.phone-shortcuts`, `.quick-filters`, `.gallery-dots`, `.carousel-dots`, `.checkout-dock` | homepage, listing, product page, carousel, checkout | Rendered for every screen size, displayed only on phones |
+| Page transitions | `src/app/(storefront)/template.tsx` | Tag a drill-down `Link` with `transitionTypes={["nav-forward"]}`; untagged navigations swap instantly. The tapped card's photo morphs into `.gallery-main` (named on tap in `motion-policy.tsx`) |
+| `haptic()` | `storefront/device.ts` | A few milliseconds of vibration for commits (add to bag, back, sheet dismiss). Use sparingly |
+| Install | `src/app/manifest.ts`, `apple-icon.tsx`, `pwa-icon/route.tsx` | Icon is the store's initials on `theme.primary`; swap in your own PNGs for a logo |
+
+Touchscreens don't get hover styles: hover-only rules in `storefront.css` sit
+inside `@media (hover: hover)` so a tapped button doesn't stay highlighted.
+Keep new hover rules there too.
+
+Checks on phones: 360 px with no horizontal overflow, the page title appears
+in the bar when you scroll, sheets drag and snap back, and nothing sits under
+the tab bar or the home indicator (`env(safe-area-inset-*)`).
+
 ## Admin building blocks
 
 `src/app/admin/admin.css` (everything under `.admin-root`) plus:

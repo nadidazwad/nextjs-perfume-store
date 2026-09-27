@@ -12,6 +12,8 @@ export function LoginForm() {
   return (
     <form
       className="admin-login-form"
+      // Never GET: if the script hasn't loaded, a native submit must not put the password in the URL.
+      method="post"
       onSubmit={async (e) => {
         e.preventDefault();
         setPending(true);

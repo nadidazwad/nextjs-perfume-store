@@ -134,8 +134,10 @@ p {
   text-underline-offset: 4px;
   transition: text-decoration-color 150ms ease;
 }
-.text-link:hover {
-  text-decoration-color: currentColor;
+@media (hover: hover) {
+  .text-link:hover {
+    text-decoration-color: currentColor;
+  }
 }
 .skip-link {
   position: fixed;
@@ -175,16 +177,20 @@ p {
     color 150ms ease,
     transform 150ms var(--ease-out);
 }
-.button:hover {
-  border-color: var(--sf-ink);
+@media (hover: hover) {
+  .button:hover {
+    border-color: var(--sf-ink);
+  }
 }
 .button.primary {
   border-color: var(--sf-accent);
   background: var(--sf-accent);
   color: var(--sf-accent-ink);
 }
-.button.primary:hover {
-  background: color-mix(in srgb, var(--sf-accent), white 12%);
+@media (hover: hover) {
+  .button.primary:hover {
+    background: color-mix(in srgb, var(--sf-accent), white 12%);
+  }
 }
 .button.light {
   border-color: white;
@@ -195,8 +201,10 @@ p {
   border-color: transparent;
   background: transparent;
 }
-.button.ghost:hover {
-  background: var(--sf-panel);
+@media (hover: hover) {
+  .button.ghost:hover {
+    background: var(--sf-panel);
+  }
 }
 .button.sm {
   min-height: 36px;
@@ -242,9 +250,11 @@ p {
     border-color 150ms ease,
     transform 150ms var(--ease-out);
 }
-.icon-button:hover {
-  border-color: var(--sf-line-strong);
-  background: var(--sf-panel);
+@media (hover: hover) {
+  .icon-button:hover {
+    border-color: var(--sf-line-strong);
+    background: var(--sf-panel);
+  }
 }
 .icon-button .count {
   position: absolute;
@@ -299,18 +309,22 @@ html:not([data-input="keyboard"]) :is(.button, .icon-button, a.chip, .chip.remov
     color 150ms ease,
     transform 150ms var(--ease-out);
 }
-a.chip:hover,
-.chip.link:hover {
-  border-color: var(--sf-ink);
-  color: var(--sf-ink);
+@media (hover: hover) {
+  a.chip:hover,
+  .chip.link:hover {
+    border-color: var(--sf-ink);
+    color: var(--sf-ink);
+  }
 }
 .chip.removable {
   background: var(--sf-panel);
   border-color: transparent;
   color: var(--sf-ink);
 }
-.chip.removable:hover {
-  background: var(--sf-panel-2);
+@media (hover: hover) {
+  .chip.removable:hover {
+    background: var(--sf-panel-2);
+  }
 }
 .chip-list {
   display: flex;
@@ -697,8 +711,10 @@ html:not([data-input="keyboard"]) .star-input label:active {
   translate: 0 -50%;
   transition: background-color 150ms ease;
 }
-.announcement-close:hover {
-  background: rgb(255 255 255 / 14%);
+@media (hover: hover) {
+  .announcement-close:hover {
+    background: rgb(255 255 255 / 14%);
+  }
 }
 @keyframes sf-fade-in {
   from {
@@ -848,8 +864,10 @@ html[data-header-scrolled] .store-header::after {
   position: relative;
   z-index: 1;
 }
-.nav-link:hover {
-  color: var(--sf-ink);
+@media (hover: hover) {
+  .nav-link:hover {
+    color: var(--sf-ink);
+  }
 }
 .nav-rail .nav-link[aria-current="page"],
 .nav-menu[open] > .nav-link {
@@ -865,14 +883,18 @@ html[data-header-scrolled] .store-header::after {
   align-items: center;
   gap: 4px;
 }
-.nav-aside .nav-link:hover {
-  background: var(--sf-panel);
+@media (hover: hover) {
+  .nav-aside .nav-link:hover {
+    background: var(--sf-panel);
+  }
 }
 .nav-link[data-accent] {
   color: var(--sf-deal);
 }
-.nav-aside .nav-link[data-accent]:hover {
-  background: color-mix(in srgb, var(--sf-deal) 8%, white);
+@media (hover: hover) {
+  .nav-aside .nav-link[data-accent]:hover {
+    background: color-mix(in srgb, var(--sf-deal) 8%, white);
+  }
 }
 .nav-menu {
   position: static;
@@ -945,8 +967,10 @@ html[data-header-scrolled] .store-header::after {
   text-underline-offset: 4px;
   transition: text-decoration-color 150ms ease;
 }
-.nav-card-link:hover {
-  text-decoration-color: currentColor;
+@media (hover: hover) {
+  .nav-card-link:hover {
+    text-decoration-color: currentColor;
+  }
 }
 .nav-list {
   display: grid;
@@ -981,8 +1005,10 @@ html[data-header-scrolled] .store-header::after {
   height: 40px;
   transition: border-color 150ms ease;
 }
-.nav-row:hover .icon-tile {
-  border-color: var(--sf-line-strong);
+@media (hover: hover) {
+  .nav-row:hover .icon-tile {
+    border-color: var(--sf-line-strong);
+  }
 }
 .nav-row-copy {
   display: grid;
@@ -1322,8 +1348,10 @@ body:has(.store-header) :is([data-slot="sheet-overlay"], [data-slot="dialog-over
 .menu-link::-webkit-details-marker {
   display: none;
 }
-.menu-link:hover {
-  background: var(--sf-panel);
+@media (hover: hover) {
+  .menu-link:hover {
+    background: var(--sf-panel);
+  }
 }
 .menu-link[aria-current="page"] {
   border-color: var(--sf-line);
@@ -1374,8 +1402,10 @@ body:has(.store-header) :is([data-slot="sheet-overlay"], [data-slot="dialog-over
   text-decoration: none;
   transition: border-color 120ms ease;
 }
-.menu-brand:hover {
-  border-color: var(--sf-line-strong);
+@media (hover: hover) {
+  .menu-brand:hover {
+    border-color: var(--sf-line-strong);
+  }
 }
 .menu-brand .icon-tile {
   width: 36px;
@@ -1757,8 +1787,10 @@ body:has(.store-header) [data-slot="dialog-overlay"]:is([data-starting-style], [
   border-radius: var(--sf-r-card);
   transition: border-color 150ms ease;
 }
-.brand-tile:hover {
-  border-color: var(--sf-ink);
+@media (hover: hover) {
+  .brand-tile:hover {
+    border-color: var(--sf-ink);
+  }
 }
 .brand-tile .media,
 .brand-featured .media {
@@ -1990,9 +2022,16 @@ body:has(.store-header) [data-slot="dialog-overlay"]:is([data-starting-style], [
   width: var(--size);
   height: var(--size);
 }
-.quick-add:is(:focus-visible, :hover) {
+.quick-add:focus-visible {
   background: var(--sf-accent);
   color: var(--sf-accent-ink);
+}
+/* Touchscreens skip hover styles, so a tapped button doesn't stay highlighted. */
+@media (hover: hover) {
+  .quick-add:hover {
+    background: var(--sf-accent);
+    color: var(--sf-accent-ink);
+  }
 }
 .quick-add:focus-visible {
   outline: none;
@@ -2178,8 +2217,10 @@ html:not([data-input="keyboard"]) .quick-add:not(:disabled):active {
   text-decoration: none;
   transition: color 150ms ease;
 }
-.breadcrumbs a:hover {
-  color: var(--sf-ink);
+@media (hover: hover) {
+  .breadcrumbs a:hover {
+    color: var(--sf-ink);
+  }
 }
 .breadcrumbs [aria-current] {
   color: var(--sf-ink);
@@ -2255,8 +2296,10 @@ html:not([data-input="keyboard"]) .quick-add:not(:disabled):active {
     border-color 150ms ease,
     background-color 150ms ease;
 }
-.sort-select:hover {
-  border-color: var(--sf-line-strong);
+@media (hover: hover) {
+  .sort-select:hover {
+    border-color: var(--sf-line-strong);
+  }
 }
 .sort-select:focus-visible,
 .sort-select[data-popup-open] {
@@ -2488,8 +2531,10 @@ div.store-width.empty-state {
   text-underline-offset: 3px;
   cursor: pointer;
 }
-.filter-more:hover {
-  text-decoration-color: currentColor;
+@media (hover: hover) {
+  .filter-more:hover {
+    text-decoration-color: currentColor;
+  }
 }
 .filter-more svg {
   transition: transform 180ms var(--ease-out);
@@ -2513,8 +2558,10 @@ div.store-width.empty-state {
   cursor: pointer;
   transition: background-color 120ms ease;
 }
-.filter-option:hover {
-  background: rgb(255 255 255 / 70%);
+@media (hover: hover) {
+  .filter-option:hover {
+    background: rgb(255 255 255 / 70%);
+  }
 }
 .filter-option:has(input:checked) {
   background: white;
@@ -2652,8 +2699,10 @@ div.store-width.empty-state {
 .gallery-thumbnails button[aria-pressed="true"] {
   border-color: var(--sf-ink);
 }
-.gallery-thumbnails button:not([aria-pressed="true"]):hover {
-  border-color: var(--sf-line-strong);
+@media (hover: hover) {
+  .gallery-thumbnails button:not([aria-pressed="true"]):hover {
+    border-color: var(--sf-line-strong);
+  }
 }
 .gallery-thumbnails .media {
   aspect-ratio: var(--sf-product-ratio);
@@ -2674,10 +2723,12 @@ div.store-width.empty-state {
   font-size: 14px;
   text-decoration: none;
 }
-.buy-brand:hover {
-  color: var(--sf-ink);
-  text-decoration: underline;
-  text-underline-offset: 4px;
+@media (hover: hover) {
+  .buy-brand:hover {
+    color: var(--sf-ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 }
 .buy-box h1 {
   font-size: clamp(32px, 3.4vw, 46px);
@@ -2782,8 +2833,10 @@ div.store-width.empty-state {
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
-.size-options button:hover:not(:disabled) {
-  border-color: var(--sf-line-strong);
+@media (hover: hover) {
+  .size-options button:hover:not(:disabled) {
+    border-color: var(--sf-line-strong);
+  }
 }
 .size-options button[aria-pressed="true"] {
   border-color: var(--sf-ink);
@@ -2818,8 +2871,10 @@ div.store-width.empty-state {
     background-color 150ms ease,
     transform 150ms var(--ease-out);
 }
-.quantity-control button:hover:not(:disabled) {
-  background: var(--sf-panel);
+@media (hover: hover) {
+  .quantity-control button:hover:not(:disabled) {
+    background: var(--sf-panel);
+  }
 }
 .quantity-control button:disabled {
   color: var(--sf-faint);
@@ -2929,9 +2984,11 @@ div.store-width.empty-state {
   text-decoration: none;
   font-variant-numeric: tabular-nums;
 }
-.buy-rating:hover > span:last-child {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+@media (hover: hover) {
+  .buy-rating:hover > span:last-child {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 }
 
 .mobile-buy-bar {
@@ -3194,8 +3251,10 @@ div.store-width.empty-state {
   border-radius: var(--sf-r-card);
   transition: border-color 150ms ease;
 }
-.brand-featured a:hover {
-  border-color: var(--sf-ink);
+@media (hover: hover) {
+  .brand-featured a:hover {
+    border-color: var(--sf-ink);
+  }
 }
 .brand-search {
   display: grid;
@@ -3245,8 +3304,10 @@ div.store-width.empty-state {
   text-decoration: none;
   transition: background-color 120ms ease;
 }
-.brand-alphabet a:hover {
-  background: white;
+@media (hover: hover) {
+  .brand-alphabet a:hover {
+    background: white;
+  }
 }
 .brand-letter {
   display: grid;
@@ -3270,9 +3331,11 @@ div.store-width.empty-state {
   color: var(--sf-ink);
   text-decoration: none;
 }
-.brand-letter a:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+@media (hover: hover) {
+  .brand-letter a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 }
 .search-page-form {
   padding-top: 24px;
@@ -3449,11 +3512,13 @@ div.store-width.empty-state {
   text-decoration: none;
   transition: color 150ms ease;
 }
-.footer-contact a:hover,
-.footer-links a:hover {
-  color: var(--sf-ink);
-  text-decoration: underline;
-  text-underline-offset: 4px;
+@media (hover: hover) {
+  .footer-contact a:hover,
+  .footer-links a:hover {
+    color: var(--sf-ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 }
 .social-links {
   display: flex;

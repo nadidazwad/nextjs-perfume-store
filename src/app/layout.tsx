@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./storefront.css";
 import "./commerce.css";
+import "./app-shell.css";
 import { storeConfig } from "../../store.config";
 import { themeVariables } from "@/lib/theme";
 

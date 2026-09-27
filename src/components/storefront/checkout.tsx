@@ -40,6 +40,7 @@ export function CheckoutPage() {
   const submitting = useRef(false),
     requestId = useRef<string | null>(null);
   const totals = deliveryTotals(cart.subtotal, zoneId, cart.discount);
+  const submitDisabled = pending || cart.busy || Boolean(cart.error) || !enabled.length;
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting.current) return;
@@ -317,13 +318,7 @@ export function CheckoutPage() {
               {error}
             </p>
           )}
-          <button
-            className="button primary"
-            type="submit"
-            disabled={
-              pending || cart.busy || Boolean(cart.error) || !enabled.length
-            }
-          >
+          <button className="button primary checkout-submit" type="submit" disabled={submitDisabled}>
             {pending ? "Placing your order…" : "Place order"}
           </button>
           <p className="muted checkout-privacy">
@@ -333,6 +328,21 @@ export function CheckoutPage() {
             </Link>
           </p>
         </aside>
+        {/* Phones: the total and the order button stay docked while the form scrolls (app-shell.css). */}
+        <div className="checkout-dock">
+          {error && (
+            <p className="checkout-dock-error" aria-hidden>
+              {error}
+            </p>
+          )}
+          <p>
+            <small>Total</small>
+            <strong>{formatMoney(totals.total)}</strong>
+          </p>
+          <button className="button primary" type="submit" disabled={submitDisabled}>
+            {pending ? "Placing…" : "Place order"}
+          </button>
+        </div>
       </form>
     </div>
   );

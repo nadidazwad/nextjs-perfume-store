@@ -14,6 +14,8 @@ import {
 import { useCart } from "./cart-provider";
 import { Media } from "./media";
 import { CountBadge } from "./count-badge";
+import { SheetGrabber } from "./sheet-drag";
+import { usePhone } from "./device";
 import { formatMoney } from "@/lib/money";
 import { describeCoupon } from "@/lib/coupons/rules";
 import { storeConfig } from "../../../store.config";
@@ -305,6 +307,7 @@ export function CouponForm() {
 }
 export function CartDrawer() {
   const cart = useCart();
+  const phone = usePhone();
   return (
     <Sheet open={cart.open} onOpenChange={cart.setOpen}>
       <SheetTrigger
@@ -314,7 +317,8 @@ export function CartDrawer() {
         <ShoppingBag size={21} />
         <CountBadge value={cart.count} ready={cart.ready} />
       </SheetTrigger>
-      <SheetContent className="store-sheet cart-sheet" showCloseButton={false}>
+      <SheetContent side={phone ? "bottom" : "right"} className="store-sheet cart-sheet" showCloseButton={false}>
+        <SheetGrabber onDismiss={() => cart.setOpen(false)} />
         <div className="cart-sheet-heading">
           <SheetTitle>
             Your bag <span className="muted">{cart.count}</span>

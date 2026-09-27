@@ -4,11 +4,14 @@ import { publicDb } from "@/db";
 import * as schema from "@/db/schema";
 import { authSecret, env } from "@/lib/env";
 import { authRateLimitStorage } from "@/lib/rate-limit";
+import { lanOrigins } from "@/lib/dev-origins";
 
 function createAuth() {
   return betterAuth({
     database: drizzleAdapter(publicDb, { provider: "pg", schema }),
     baseURL: env.NEXT_PUBLIC_APP_URL,
+    // Dev only (empty in production): sign in from a phone on the same Wi-Fi.
+    trustedOrigins: lanOrigins(),
     secret: authSecret(),
     emailAndPassword: { enabled: true, disableSignUp: true },
     user: {

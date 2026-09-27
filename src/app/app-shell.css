@@ -1,0 +1,1454 @@
+/* ==========================================================================
+   PHONE APP SHELL
+   --------------------------------------------------------------------------
+   Makes the storefront feel like a native app on phones (≤760px): a
+   translucent navigation bar with a back button and a collapsing title, a
+   floating tab bar, bottom sheets you can drag away while the page recedes
+   behind them, an "Added to bag" toast, edge-to-edge product photos and
+   push/pop page transitions.
+
+   It builds on the storefront design system (storefront.css): same tokens,
+   same pill/panel language, same theme colours from store.config.ts. Tablets
+   and desktops are untouched; every rule that changes layout sits inside the
+   phone media query. Keep the breakpoint in step with PHONE_QUERY in
+   src/components/storefront/device.ts.
+
+   Components: src/components/storefront/app-shell.tsx (TabBar, AppBarBack,
+   AppBarTitle, AddedToast), sheet-drag.tsx (SheetGrabber), template.tsx in
+   src/app/(storefront) (page transitions).
+   Sections: search for "=== NAME".
+   ========================================================================== */
+
+/* === TOKENS ============================================================== */
+:root {
+  --app-bar-h: 54px; /* phone navigation bar */
+  --tab-bar-h: 62px; /* floating tab bar */
+  --tab-bar-gap: max(10px, env(safe-area-inset-bottom)); /* bar to screen edge */
+  --dock: calc(var(--tab-bar-h) + var(--tab-bar-gap)); /* space the bar takes */
+  --sf-r-sheet: min(calc(var(--radius) * 5), 26px); /* bottom sheet top corners */
+  --glass: rgb(255 255 255 / 78%); /* translucent chrome */
+  --glass-blur: saturate(1.8) blur(22px);
+  --recede-scale: 0.07; /* how far the page shrinks behind a sheet */
+}
+
+/* Phone-only pieces stay out of the way everywhere else. */
+.appbar-back,
+.appbar-slot,
+.appbar-title,
+.appbar-call,
+.appbar-lead,
+.tab-bar,
+.added-toast,
+.phone-shortcuts,
+.quick-filters,
+.gallery-dots,
+.gallery-share,
+.carousel-dots,
+.sheet-grabber,
+.checkout-dock,
+.nav-progress {
+  display: none;
+}
+/* The "screen" wrapper (storefront layout). It carries the page's flex column. */
+.app-root {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+/* Page transitions wrap every page in one opaque layer (template.tsx). */
+.route-page {
+  min-width: 0;
+  background: var(--sf-canvas);
+}
+
+@media (max-width: 760px) {
+  :root {
+    --sf-section-gap: 44px;
+    --sf-gutter: 16px;
+  }
+  body:has(.store-header) {
+    background: var(--sf-canvas);
+    transition: background-color 300ms ease;
+  }
+  /* Controls behave like app controls: no text selection or callouts on long press. */
+  .tab-bar,
+  .appbar-back,
+  .appbar-call,
+  .phone-shortcut,
+  .quick-filters,
+  .button,
+  .icon-button,
+  .chip,
+  .size-options button {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+  a,
+  button,
+  summary,
+  label {
+    touch-action: manipulation;
+  }
+
+  /* === SAFE AREAS & STATUS BAR =========================================== */
+  .app-root {
+    padding-top: env(safe-area-inset-top);
+  }
+  /* Behind the status bar when installed to the home screen (viewport-fit=cover). */
+  .app-root::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 41;
+    height: env(safe-area-inset-top);
+    background: var(--glass);
+    backdrop-filter: var(--glass-blur);
+  }
+
+  /* === NAVIGATION BAR ==================================================== */
+  .announcement {
+    min-height: 34px;
+    padding-block: 6px;
+    font-size: 12.5px;
+  }
+  .store-header {
+    top: env(safe-area-inset-top);
+    border-bottom-color: transparent;
+    background: var(--glass);
+    backdrop-filter: var(--glass-blur);
+    transition: border-color 200ms ease;
+  }
+  /* A hairline appears only once content scrolls under the bar (scroll edge). */
+  html[data-header-scrolled] .store-header {
+    border-bottom-color: var(--sf-line);
+  }
+  .store-header::after {
+    display: none;
+  }
+  .header-main {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--app-bar-h);
+  }
+  .header-main > :is(.mobile-only, .header-logo, .header-search, .header-call, .header-actions) {
+    display: none;
+  }
+  .appbar-back {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-left: -8px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sf-r-pill);
+    background: transparent;
+    color: var(--sf-ink);
+    transition:
+      background-color 150ms ease,
+      scale 150ms var(--ease-out);
+  }
+  .appbar-back:active {
+    background: var(--sf-panel);
+    scale: 0.92;
+  }
+  /* The logo sits centred on every screen. Scrolling past the page's title
+     lifts it a little and fades the page name in underneath. */
+  .appbar-title {
+    display: grid;
+    grid-column: 2;
+    justify-items: center;
+    align-content: center;
+    min-width: 0;
+    height: var(--app-bar-h);
+    text-align: center;
+  }
+  .appbar-title .store-logo {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 20px;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition:
+      font-size 260ms var(--ease-drawer),
+      translate 260ms var(--ease-drawer);
+  }
+  .appbar-title .store-logo .media {
+    width: 120px;
+    height: 32px;
+    transition: height 260ms var(--ease-drawer);
+  }
+  .appbar-subtitle {
+    display: block;
+    max-width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    color: var(--sf-muted);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 15px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transition:
+      max-height 260ms var(--ease-drawer),
+      opacity 180ms ease;
+  }
+  .appbar-title[data-shown] .store-logo {
+    font-size: 16px;
+  }
+  .appbar-title[data-shown] .store-logo .media {
+    height: 24px;
+  }
+  .appbar-title[data-shown] .appbar-subtitle {
+    max-height: 15px;
+    opacity: 1;
+  }
+  .appbar-lead,
+  .appbar-call {
+    display: grid;
+    justify-self: end;
+    width: 40px;
+    height: 40px;
+    border-color: transparent;
+    background: var(--sf-panel);
+  }
+  .appbar-lead {
+    justify-self: start;
+  }
+  .appbar-call {
+    grid-column: 3;
+  }
+  :is(.appbar-lead, .appbar-call):active {
+    background: var(--sf-panel-2);
+  }
+
+  /* Native screens don't show breadcrumbs; the back button does that job. */
+  .breadcrumbs {
+    display: none;
+  }
+  /* Large titles, tight like iOS: every page title except the hero and product name, which size themselves. */
+  #main h1:not(.hero-copy h1, .buy-box h1) {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+  }
+  .listing-page,
+  .commerce-page {
+    padding-top: 14px;
+  }
+
+  /* === TAB BAR =========================================================== */
+  /* A floating glass pill; the grey highlight glides to the active tab. */
+  .tab-bar {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: var(--tab-bar-gap);
+    z-index: 45;
+    display: grid;
+    grid-template-columns: repeat(var(--tabs), minmax(0, 1fr));
+    height: var(--tab-bar-h);
+    padding: 5px;
+    border-radius: var(--sf-r-pill);
+    background: var(--glass);
+    backdrop-filter: var(--glass-blur);
+    box-shadow:
+      0 0 0 1px rgb(20 22 20 / 7%),
+      0 14px 34px -12px rgb(20 22 20 / 30%),
+      inset 0 1px 0 rgb(255 255 255 / 70%);
+    transition:
+      translate 420ms var(--ease-drawer),
+      opacity 220ms ease,
+      height 320ms var(--ease-drawer),
+      left 320ms var(--ease-drawer),
+      right 320ms var(--ease-drawer);
+  }
+  .tab-bar[data-hidden] {
+    opacity: 0;
+    pointer-events: none;
+    translate: 0 calc(100% + 28px);
+  }
+  /* Scrolling down tucks the labels away and slims the bar; scrolling up restores it. */
+  .tab-bar[data-compact] {
+    left: 28px;
+    right: 28px;
+    height: 50px;
+  }
+  .tab-indicator {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    left: 5px;
+    width: calc((100% - 10px) / var(--tabs));
+    border-radius: var(--sf-r-pill);
+    background: var(--sf-panel-2);
+    translate: calc(100% * var(--active)) 0;
+    transition:
+      translate 420ms var(--ease-drawer),
+      opacity 200ms ease;
+  }
+  .tab-indicator[data-none] {
+    opacity: 0;
+  }
+  .tab {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sf-r-pill);
+    background: none;
+    color: var(--sf-muted);
+    font: inherit;
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+  .tab[data-active] {
+    color: var(--sf-ink);
+  }
+  .tab-icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    transition: scale 200ms var(--ease-out);
+  }
+  .tab:active .tab-icon {
+    scale: 0.84;
+  }
+  /* The icon settles in with a small pop when its tab becomes active. */
+  .tab[data-active] .tab-icon svg {
+    animation: tab-pop 420ms var(--ease-drawer);
+  }
+  .tab-label {
+    max-height: 12px;
+    overflow: hidden;
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 12px;
+    letter-spacing: 0.01em;
+    transition:
+      max-height 320ms var(--ease-drawer),
+      opacity 160ms ease;
+  }
+  .tab-bar[data-compact] .tab {
+    gap: 0;
+  }
+  .tab-bar[data-compact] .tab-label {
+    max-height: 0;
+    opacity: 0;
+  }
+  .tab .count {
+    position: absolute;
+    top: -5px;
+    left: calc(100% - 9px);
+    display: grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border: 2px solid white;
+    border-radius: 999px;
+    background: var(--sf-accent);
+    color: var(--sf-accent-ink);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .tab .count[hidden] {
+    display: none;
+  }
+  .tab .count[data-bump] {
+    animation: sf-bump 320ms var(--ease-out);
+  }
+  /* Room at the bottom of every page for whichever bar is docked there. */
+  html[data-tabbar] .store-footer {
+    padding-bottom: calc(var(--dock) + 16px);
+  }
+  html:not([data-tabbar]) .store-footer {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 88px);
+  }
+
+  /* === ADDED-TO-BAG TOAST ================================================ */
+  .added-toast {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(var(--dock) + 10px);
+    z-index: 46;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 68px;
+    padding: 8px 8px 8px 8px;
+    border-radius: var(--sf-r-panel);
+    background: var(--sf-ink);
+    color: white;
+    box-shadow: 0 18px 40px -14px rgb(20 22 20 / 55%);
+    opacity: 0;
+    pointer-events: none;
+    scale: 0.96;
+    translate: 0 18px;
+    transition:
+      opacity 200ms ease,
+      scale 420ms var(--ease-drawer),
+      translate 420ms var(--ease-drawer);
+  }
+  html:not([data-tabbar]) .added-toast {
+    bottom: calc(max(10px, env(safe-area-inset-bottom)) + 70px);
+  }
+  .added-toast[data-visible] {
+    opacity: 1;
+    pointer-events: auto;
+    scale: 1;
+    translate: 0;
+  }
+  .added-toast-image {
+    flex-shrink: 0;
+    width: 46px;
+    height: 52px;
+    overflow: hidden;
+    border-radius: var(--sf-r-control);
+    background: white;
+  }
+  .added-toast-image .media {
+    width: 100%;
+    height: 100%;
+  }
+  .added-toast-copy {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+  }
+  .added-toast-copy small {
+    color: rgb(255 255 255 / 62%);
+    font-size: 11.5px;
+  }
+  .added-toast-copy strong {
+    overflow: hidden;
+    font-size: 14.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .added-toast-copy > span {
+    overflow: hidden;
+    color: rgb(255 255 255 / 62%);
+    font-size: 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+  .added-toast .button.primary {
+    flex-shrink: 0;
+    border-color: white;
+    background: white;
+    color: var(--sf-ink);
+  }
+
+  /* === BOTTOM SHEETS ===================================================== */
+  /* Every storefront sheet rises from the bottom on phones, with a grabber.
+     --drag is the finger offset (SheetGrabber); translate is the open/close. */
+  .store-sheet[data-side="bottom"][data-slot="sheet-content"] {
+    inset: auto 0 0 0;
+    width: 100% !important;
+    max-width: none;
+    height: auto;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 20px);
+    padding-top: 26px;
+    border: 0;
+    border-radius: var(--sf-r-sheet) var(--sf-r-sheet) 0 0;
+    box-shadow:
+      0 -1px 0 rgb(20 22 20 / 5%),
+      0 -20px 50px -24px rgb(20 22 20 / 40%);
+    opacity: 1;
+    transform: translateY(var(--drag, 0px));
+    transition:
+      translate 480ms var(--ease-drawer),
+      transform 480ms var(--ease-drawer);
+  }
+  .store-sheet[data-side="bottom"]:is([data-starting-style], [data-ending-style]) {
+    opacity: 1;
+    translate: 0 100%;
+  }
+  .store-sheet[data-side="bottom"][data-ending-style] {
+    transition-duration: 340ms;
+  }
+  .store-sheet[data-dragging] {
+    transition: none !important;
+  }
+  .store-sheet[data-side="bottom"] .sheet-grabber {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    z-index: 3;
+    display: block;
+    width: 38px;
+    height: 5px;
+    margin-left: -19px;
+    border-radius: 3px;
+    background: var(--sf-line-strong);
+  }
+  body:has(.store-header) [data-slot="sheet-overlay"] {
+    background: rgb(12 13 12 / 38%);
+  }
+  /* Close buttons in sheets become the small grey circle apps use. */
+  .store-sheet[data-side="bottom"] :is(.cart-sheet-heading, .menu-sheet-head) [data-slot="sheet-close"] {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: var(--sf-panel);
+    color: var(--sf-muted);
+  }
+  .store-sheet[data-side="bottom"] :is(.cart-sheet-heading, .menu-sheet-head) [data-slot="sheet-close"] svg {
+    width: 17px;
+    height: 17px;
+  }
+  /* Bag / wishlist: sized to their contents, up to nearly full height. */
+  .cart-sheet[data-side="bottom"][data-slot="sheet-content"] {
+    padding: 22px 16px 0;
+  }
+  .cart-sheet[data-side="bottom"] .cart-sheet-heading {
+    padding-bottom: 14px;
+  }
+  .cart-sheet[data-side="bottom"] .cart-sheet-heading h2 {
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .cart-sheet[data-side="bottom"] .cart-sheet-body {
+    padding-top: 16px;
+    overscroll-behavior: contain;
+  }
+  .cart-sheet[data-side="bottom"] .cart-sheet-footer {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
+  }
+  .cart-sheet[data-side="bottom"] .empty-cart {
+    justify-items: center;
+    padding-block: 24px 36px;
+    text-align: center;
+  }
+  /* Shop sheet: a full-height detent with its own scrolling list. */
+  .menu-sheet[data-side="bottom"][data-slot="sheet-content"] {
+    height: calc(100dvh - env(safe-area-inset-top) - 20px);
+    padding: 22px 0 0;
+    overflow: hidden;
+    gap: 10px;
+    background: var(--sf-canvas);
+  }
+  .menu-sheet[data-side="bottom"] .menu-sheet-head {
+    padding: 0 16px;
+  }
+  .menu-sheet[data-side="bottom"] .menu-sheet-head [data-slot="sheet-title"] {
+    font-size: 26px;
+    letter-spacing: -0.035em;
+  }
+  .menu-sheet[data-side="bottom"] .menu-sheet-nav {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 12px 12px;
+    overscroll-behavior: contain;
+  }
+  .menu-sheet[data-side="bottom"] .menu-sheet-contact {
+    margin: 0 12px calc(env(safe-area-inset-bottom) + 12px);
+  }
+  .menu-link:active,
+  .menu-brand:active {
+    background: var(--sf-panel-2);
+  }
+  /* Filters keep their own full-height layout; the grabber just needs room. */
+  .filter-sheet[data-side="bottom"][data-slot="sheet-content"] {
+    height: calc(100dvh - env(safe-area-inset-top) - 40px);
+    padding: 26px 0 0;
+    gap: 8px;
+  }
+  .filter-sheet [data-slot="sheet-title"] {
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .filter-sheet > [data-slot="sheet-close"] {
+    top: 16px;
+    right: 14px;
+    border-radius: 50%;
+    background: var(--sf-panel);
+  }
+
+  /* === THE PAGE RECEDES ================================================== */
+  /* Behind an open sheet the page scales back into a rounded card (like iOS
+     page sheets) and follows the finger back out while the sheet is dragged.
+     SheetGrabber sets the origin, the viewport clip and --sheet-progress. */
+  .app-root {
+    transform-origin: 50% var(--recede-origin, 50vh);
+    transition:
+      scale 480ms var(--ease-drawer),
+      translate 480ms var(--ease-drawer);
+  }
+  html:has(.store-sheet[data-side="bottom"][data-open]) .app-root {
+    scale: calc(1 - var(--recede-scale) * var(--sheet-progress, 1));
+    translate: 0 calc(10px * var(--sheet-progress, 1));
+    clip-path: inset(var(--recede-top, 0px) 0 var(--recede-bottom, 0px) round var(--sf-r-sheet));
+    will-change: scale;
+  }
+  html:has(.store-sheet[data-dragging]) .app-root {
+    transition: none;
+  }
+  html:has(.store-sheet[data-side="bottom"][data-open]) body {
+    background: #0c0d0c;
+  }
+
+  /* === PRESS FEEDBACK ==================================================== */
+  /* Touch-down shows at once; the release eases back. */
+  .product-card-media,
+  .category-tile,
+  .event-card,
+  .brand-tile {
+    transition: scale 260ms var(--ease-out);
+  }
+  .product-card:has(.product-card-link:active) .product-card-media,
+  .category-tile:active,
+  .event-card:active,
+  .brand-tile:active {
+    scale: 0.97;
+    transition-duration: 90ms;
+  }
+
+  /* === HOME ============================================================== */
+  .home-page {
+    gap: var(--sf-section-gap);
+    padding-top: 6px;
+  }
+  /* Hero: one photo card, copy on a soft scrim, dots underneath. */
+  .hero-slide {
+    position: relative;
+    display: block;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: var(--sf-r-panel);
+  }
+  .hero-media {
+    aspect-ratio: 4 / 5;
+    min-height: 0;
+    border-radius: 0;
+  }
+  .hero-slide:has(.hero-media) .hero-copy {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 1;
+    gap: 10px;
+    padding: 64px 18px 18px;
+    background: linear-gradient(to top, rgb(12 13 12 / 62%), rgb(12 13 12 / 30%) 60%, transparent);
+    color: white;
+  }
+  .hero-slide:has(.hero-media) .hero-copy :is(h1, h2) {
+    color: white;
+  }
+  .hero-slide:has(.hero-media) .hero-copy p {
+    color: rgb(255 255 255 / 85%);
+    font-size: 14.5px;
+  }
+  .hero-copy :is(h1, h2) {
+    max-width: 12ch;
+    font-size: 32px;
+    letter-spacing: -0.04em;
+  }
+  .hero-slide:not(:has(.hero-media)) {
+    padding: 28px 20px;
+    background: var(--sf-panel);
+  }
+  .hero-actions {
+    margin-top: 4px;
+  }
+  .hero-actions .button:not(.primary) {
+    display: none;
+  }
+  .hero-actions .button.lg {
+    min-height: 48px;
+    flex: 1;
+  }
+  .hero-carousel .carousel-controls,
+  .carousel-controls {
+    display: none;
+  }
+  .carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .carousel-dots span,
+  .gallery-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--sf-line-strong);
+    transition:
+      width 360ms var(--ease-drawer),
+      background-color 200ms ease;
+  }
+  .carousel-dots span[data-active],
+  .gallery-dots span[data-active] {
+    width: 18px;
+    background: var(--sf-ink);
+  }
+  /* Round category shortcuts under the hero. */
+  .phone-shortcuts {
+    display: flex;
+    gap: 2px;
+    margin: calc(var(--sf-section-gap) * -0.55) calc(var(--sf-gutter) * -1) 0;
+    padding: 0 var(--sf-gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .phone-shortcut {
+    display: grid;
+    flex: 1 0 60px;
+    justify-items: center;
+    gap: 6px;
+    color: var(--sf-ink-2);
+    font-size: 11.5px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .phone-shortcut > span {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    border-radius: var(--sf-r-pill);
+    background: var(--sf-panel);
+    color: var(--sf-ink);
+    transition:
+      scale 220ms var(--ease-out),
+      background-color 150ms ease;
+  }
+  .phone-shortcut:active > span {
+    scale: 0.9;
+    background: var(--sf-panel-2);
+    transition-duration: 90ms;
+  }
+  .phone-shortcut[data-tone="deal"] > span {
+    background: color-mix(in srgb, var(--sf-deal) 10%, white);
+    color: var(--sf-deal);
+  }
+  /* Value props: one swipeable row of pills instead of a 2×2 grid. */
+  .trust-row {
+    display: flex;
+    gap: 8px;
+    margin: calc(var(--sf-section-gap) * -0.55) calc(var(--sf-gutter) * -1) 0;
+    padding: 0 var(--sf-gutter);
+    overflow-x: auto;
+    border-radius: 0;
+    background: none;
+    scrollbar-width: none;
+  }
+  .trust-item {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px 6px 6px;
+    border-radius: var(--sf-r-pill);
+    background: var(--sf-panel);
+  }
+  .trust-item .icon-tile {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: var(--sf-r-pill);
+  }
+  .trust-item h3 {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .section-head {
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .section-head h2 {
+    font-size: 21px;
+    font-weight: 600;
+  }
+  .section-head p {
+    font-size: 13.5px;
+  }
+  .section-head .button.ghost {
+    min-height: 32px;
+    margin-right: -8px;
+    padding: 0 8px;
+  }
+  /* Carousels run edge to edge so the next card peeks in from the side. */
+  .store-carousel > [data-slot="carousel-content"] {
+    margin-inline: calc(var(--sf-gutter) * -1);
+    padding-inline: var(--sf-gutter);
+    scroll-padding-inline: var(--sf-gutter);
+  }
+
+  /* === PRODUCT CARD (phones) ============================================= */
+  /* Photo first, quiet text under it; the panel frame and plate drop away. */
+  .product-card {
+    --card-frame: 0px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+  .product-card-media {
+    border-radius: var(--sf-r-card);
+  }
+  .product-card-body {
+    gap: 1px;
+    margin-top: 8px;
+    padding: 0 2px;
+    border-radius: 0;
+    background: none;
+  }
+  .product-card-brand {
+    font-size: 12px;
+  }
+  .product-card-name {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.3;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .product-card-tags {
+    flex-wrap: nowrap;
+    gap: 0;
+    min-width: 0;
+    margin-top: 2px;
+    overflow: hidden;
+  }
+  .product-card-tags li {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: auto;
+    padding: 0;
+    background: none;
+    color: var(--sf-muted);
+    font-size: 12px;
+  }
+  .product-card-tags li + li::before {
+    content: "·";
+    margin: 0 5px;
+  }
+  .product-card-tags li:nth-child(3) {
+    display: none;
+  }
+  .product-card-rating {
+    margin-top: 3px;
+    font-size: 12px;
+  }
+  .product-card-body > :has(+ .product-card-foot) {
+    margin-bottom: 0;
+  }
+  .product-card-foot {
+    margin-top: 4px;
+    padding-top: 2px;
+    border-top: 0;
+  }
+  .product-card-price strong {
+    font-size: 15px;
+  }
+  .product-card-price del {
+    font-size: 12px;
+  }
+  .product-grid,
+  .related-grid,
+  .loading-page .product-grid {
+    gap: 22px 12px;
+  }
+  .card-skeleton .loading-plate {
+    background: none;
+  }
+
+  /* === LISTING =========================================================== */
+  .listing-header {
+    margin-bottom: 12px;
+  }
+  .listing-description {
+    margin-top: 6px;
+    font-size: 14px;
+  }
+  /* One sticky, swipeable row: Filters, Sort, then one-tap toggles. */
+  .listing-toolbar {
+    top: calc(var(--app-bar-h) + env(safe-area-inset-top));
+    flex-wrap: nowrap;
+    gap: 8px;
+    min-height: 0;
+    margin-bottom: 14px;
+    padding: 8px var(--sf-gutter);
+    overflow-x: auto;
+    background: var(--glass);
+    backdrop-filter: var(--glass-blur);
+    scrollbar-width: none;
+  }
+  .listing-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-filter-button,
+  .sort-select,
+  .quick-filters .chip {
+    flex-shrink: 0;
+    height: 36px;
+    min-height: 36px;
+    margin: 0;
+    padding: 0 14px;
+    border-color: var(--sf-line);
+    font-size: 13.5px;
+  }
+  .sort-select {
+    order: 1;
+    max-width: none;
+    padding-right: 10px;
+  }
+  .sort-icon {
+    margin-left: 0;
+  }
+  .quick-filters {
+    display: contents;
+  }
+  .quick-filters .chip {
+    order: 2;
+    background: white;
+    color: var(--sf-ink);
+    font-weight: 500;
+  }
+  .quick-filters .chip[data-on] {
+    border-color: var(--sf-accent);
+    background: var(--sf-accent);
+    color: var(--sf-accent-ink);
+  }
+  .listing-count {
+    order: 3;
+    flex: 0 0 auto;
+    flex-basis: auto;
+    padding-inline: 4px;
+    white-space: nowrap;
+  }
+  .active-filters {
+    flex-wrap: nowrap;
+    margin: -6px calc(var(--sf-gutter) * -1) 14px;
+    padding: 0 var(--sf-gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .active-filters > * {
+    flex-shrink: 0;
+  }
+  .pagination {
+    margin-top: 28px;
+  }
+
+  /* === PRODUCT PAGE ====================================================== */
+  .product-page {
+    padding-bottom: 32px;
+  }
+  .product-layout {
+    gap: 0;
+  }
+  /* Edge-to-edge photos you swipe through; the buy box rides up over them as a sheet. */
+  .product-gallery {
+    position: relative;
+    gap: 0;
+    margin-inline: calc(var(--sf-gutter) * -1);
+  }
+  .gallery-main {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-radius: 0;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    cursor: default;
+    view-transition-name: product-photo;
+  }
+  .gallery-main::-webkit-scrollbar {
+    display: none;
+  }
+  .gallery-frame {
+    position: relative;
+    flex: 0 0 100%;
+    opacity: 1;
+    pointer-events: auto;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    transition: none;
+  }
+  .gallery-zoom,
+  .gallery-thumbnails {
+    display: none;
+  }
+  .gallery-dots {
+    position: absolute;
+    left: 50%;
+    bottom: 36px;
+    z-index: 2;
+    display: flex;
+    gap: 5px;
+    padding: 6px 8px;
+    border-radius: var(--sf-r-pill);
+    background: rgb(255 255 255 / 72%);
+    backdrop-filter: blur(12px);
+    translate: -50% 0;
+    pointer-events: none;
+  }
+  .gallery-share {
+    position: absolute;
+    top: 12px;
+    right: var(--sf-gutter);
+    z-index: 2;
+    display: grid;
+    width: 38px;
+    height: 38px;
+    border-color: transparent;
+    background: rgb(255 255 255 / 80%);
+    backdrop-filter: blur(12px);
+  }
+  .buy-box {
+    position: relative;
+    top: auto;
+    z-index: 1;
+    gap: 16px;
+    margin: -24px calc(var(--sf-gutter) * -1) 0;
+    padding: 22px var(--sf-gutter) 0;
+    border-radius: var(--sf-r-sheet) var(--sf-r-sheet) 0 0;
+    background: var(--sf-canvas);
+  }
+  .buy-box h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+  }
+  .buy-brand {
+    margin-bottom: -12px;
+    font-size: 13px;
+  }
+  /* Sizes: a swipeable row of tiles. */
+  .size-options {
+    display: flex;
+    margin-inline: calc(var(--sf-gutter) * -1);
+    padding: 2px var(--sf-gutter);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .size-options button {
+    flex: 0 0 auto;
+    min-width: 104px;
+    scroll-snap-align: start;
+  }
+  /* The docked buy bar floats above the home indicator. */
+  .mobile-buy-bar {
+    left: 12px;
+    right: 12px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    min-height: 60px;
+  }
+  .mobile-buy-bar .button.primary {
+    min-height: 44px;
+    padding: 0 22px;
+  }
+  /* Full-screen photo viewer. */
+  .gallery-dialog[data-slot="dialog-content"] {
+    width: 100vw !important;
+    height: 100dvh;
+    max-height: none;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: #0c0d0c;
+    display: grid;
+    place-items: center;
+  }
+  .gallery-dialog .media {
+    width: 100%;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+  .gallery-dialog [data-slot="dialog-close"] {
+    top: calc(env(safe-area-inset-top) + 12px);
+    right: 12px;
+  }
+  /* Review form: a bottom sheet rather than a centred card. */
+  .store-dialog[data-slot="dialog-content"] {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 20px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
+    border-radius: var(--sf-r-sheet) var(--sf-r-sheet) 0 0;
+    translate: 0 0;
+    transition: translate 460ms var(--ease-drawer);
+  }
+  .store-dialog:is([data-starting-style], [data-ending-style]) {
+    scale: 1;
+    opacity: 1;
+    translate: 0 100%;
+  }
+
+  /* === SEARCH ============================================================ */
+  /* An app search field: filled, borderless, with the keyboard's Search key. */
+  .search-page-form {
+    padding-top: 10px;
+  }
+  .page-search input {
+    height: 44px;
+    border-color: transparent;
+    background: var(--sf-panel);
+  }
+
+  /* === CHECKOUT & BAG ==================================================== */
+  /* The total and the order button stay docked while you fill the form. */
+  .checkout-summary > .checkout-submit {
+    display: none;
+  }
+  .checkout-dock {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    z-index: 30;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    padding: 8px 8px 8px 18px;
+    border-radius: var(--sf-r-panel);
+    background: var(--sf-ink);
+    color: white;
+    box-shadow: 0 16px 40px -12px rgb(20 22 20 / 50%);
+  }
+  .checkout-dock > p:not(.checkout-dock-error) {
+    display: grid;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+  .checkout-dock small {
+    color: rgb(255 255 255 / 62%);
+    font-size: 12px;
+  }
+  .checkout-dock strong {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .checkout-dock .button.primary {
+    min-height: 46px;
+    padding: 0 24px;
+    border-color: white;
+    background: white;
+    color: var(--sf-ink);
+  }
+  .checkout-dock .button.primary:disabled {
+    background: rgb(255 255 255 / 30%);
+    border-color: transparent;
+    color: rgb(255 255 255 / 70%);
+  }
+  .checkout-dock-error {
+    flex-basis: 100%;
+    padding: 4px 4px 2px 0;
+    color: #ffb4aa;
+    font-size: 13px;
+  }
+  .checkout-field :is(input, textarea, select) {
+    font-size: 16px; /* stops iOS zooming into focused fields */
+  }
+
+  /* === BAG LINES (phones) ================================================ */
+  /* Photo, name and price on one row; the stepper and Remove beneath. */
+  .cart-line {
+    grid-template-columns: 76px minmax(0, 1fr) auto;
+    gap: 4px 14px;
+    align-items: start;
+    padding-block: 16px;
+  }
+  .cart-sheet .cart-line {
+    grid-template-columns: 68px minmax(0, 1fr) auto;
+  }
+  .cart-line .cart-image {
+    grid-row: 1 / span 2;
+    overflow: hidden;
+    border-radius: var(--sf-r-control);
+  }
+  .cart-image .media {
+    aspect-ratio: var(--sf-product-ratio);
+    outline: 0;
+  }
+  .cart-line-copy > a {
+    margin-block: 1px 2px;
+    font-size: 15px;
+  }
+  .cart-line .cart-line-total,
+  .cart-sheet .cart-line .cart-line-total {
+    grid-column: 3;
+    grid-row: 1;
+    color: var(--sf-ink);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .cart-line-actions {
+    gap: 4px 14px;
+    margin-top: 10px;
+  }
+  .cart-line-actions .quantity-control {
+    height: 38px;
+  }
+  .remove-line {
+    min-height: 38px;
+    color: var(--sf-muted);
+    text-decoration-color: transparent;
+  }
+
+  /* === SMALL THINGS ====================================================== */
+  /* Sort: shows it heard you while the new order loads. */
+  .sort-select[data-pending] {
+    border-color: var(--sf-ink);
+  }
+  .brand-page {
+    padding-top: 14px;
+  }
+  /* A sheet owns vertical drags: no pull-to-refresh or rubber-banding behind it. */
+  html:has(.store-sheet[data-open]) {
+    overscroll-behavior: none;
+  }
+  /* Load bar along the nav bar's bottom edge: starts on tap, completes when the page lands (NavProgress). */
+  .nav-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    z-index: 2;
+    display: block;
+    height: 3px;
+    background: var(--sf-accent);
+    opacity: 0;
+    pointer-events: none;
+    scale: 0 1;
+    transform-origin: left;
+  }
+  .nav-progress[data-state="loading"] {
+    opacity: 1;
+    animation: nav-progress 9s cubic-bezier(0.08, 0.8, 0.2, 1) forwards;
+  }
+  .nav-progress[data-state="done"] {
+    scale: 1 1;
+    opacity: 0;
+    transition:
+      scale 200ms var(--ease-out),
+      opacity 250ms ease 180ms;
+  }
+
+  /* === FOOTER ============================================================ */
+  .store-footer {
+    margin-top: 28px;
+  }
+}
+
+/* === PAGE TRANSITIONS ==================================================== */
+/* Tagged navigations slide like a native stack (template.tsx). The bars stay
+   anchored; the tapped card's photo morphs into the product gallery. */
+::view-transition {
+  pointer-events: none;
+}
+@media (max-width: 760px) {
+  .store-header {
+    view-transition-name: store-header;
+  }
+  .tab-bar {
+    view-transition-name: tab-bar;
+  }
+  .announcement {
+    view-transition-name: announcement;
+  }
+  ::view-transition-group(announcement) {
+    z-index: 100;
+    animation: none;
+  }
+  ::view-transition-old(announcement) {
+    display: none;
+  }
+  ::view-transition-new(announcement) {
+    animation: none;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+  ::view-transition-group(store-header),
+  ::view-transition-group(tab-bar) {
+    z-index: 100;
+    animation: none;
+  }
+  ::view-transition-old(store-header),
+  ::view-transition-old(tab-bar) {
+    display: none;
+  }
+  ::view-transition-new(store-header),
+  ::view-transition-new(tab-bar) {
+    animation: none;
+  }
+  ::view-transition-new(.nav-forward) {
+    animation: 440ms var(--ease-drawer) both vt-push-in;
+    box-shadow: -12px 0 32px rgb(12 13 12 / 14%);
+  }
+  ::view-transition-old(.nav-forward) {
+    animation: 440ms var(--ease-drawer) both vt-push-out;
+  }
+  ::view-transition-new(.nav-back) {
+    animation: 380ms var(--ease-drawer) both vt-pop-in;
+  }
+  ::view-transition-old(.nav-back) {
+    z-index: 1;
+    animation: 380ms var(--ease-drawer) both vt-pop-out;
+    box-shadow: -12px 0 32px rgb(12 13 12 / 14%);
+  }
+  /* The back button animates the whole screen (see animatedBack in app-shell.tsx);
+     the gallery photo leaves with it rather than as a separate layer. */
+  html[data-nav-back] .gallery-main {
+    view-transition-name: none;
+  }
+  html[data-nav-back]::view-transition-old(root) {
+    z-index: 1;
+    animation: 380ms var(--ease-drawer) both vt-pop-out;
+    box-shadow: -12px 0 32px rgb(12 13 12 / 14%);
+  }
+  html[data-nav-back]::view-transition-new(root) {
+    animation: 380ms var(--ease-drawer) both vt-pop-in;
+  }
+  ::view-transition-group(product-photo) {
+    z-index: 50;
+    animation-duration: 440ms;
+    animation-timing-function: var(--ease-drawer);
+  }
+}
+/* Larger screens keep plain instant navigation. */
+@media (min-width: 761px) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+@keyframes vt-push-in {
+  from {
+    translate: 100% 0;
+  }
+}
+@keyframes vt-push-out {
+  to {
+    translate: -28% 0;
+    opacity: 0.7;
+  }
+}
+@keyframes vt-pop-in {
+  from {
+    translate: -28% 0;
+    opacity: 0.7;
+  }
+}
+@keyframes vt-pop-out {
+  to {
+    translate: 100% 0;
+  }
+}
+@keyframes nav-progress {
+  from {
+    scale: 0.04 1;
+  }
+  to {
+    scale: 0.92 1;
+  }
+}
+@keyframes tab-pop {
+  30% {
+    scale: 0.82;
+  }
+  70% {
+    scale: 1.08;
+  }
+}
+
+/* === ACCESSIBILITY FALLBACKS ============================================= */
+/* Reduced motion: sheets fade instead of sliding, nothing scales or slides
+   across the screen, the page doesn't recede. Feedback stays (colours, fades). */
+@media (prefers-reduced-motion: reduce) {
+  .store-sheet[data-side="bottom"]:is([data-starting-style], [data-ending-style]) {
+    opacity: 0 !important;
+  }
+  .store-dialog:is([data-starting-style], [data-ending-style]) {
+    translate: 0 !important;
+    opacity: 0 !important;
+  }
+  html:has(.store-sheet[data-side="bottom"][data-open]) .app-root {
+    scale: 1;
+    translate: none;
+    clip-path: none;
+  }
+  .tab-indicator,
+  .tab-icon,
+  .tab-icon svg,
+  .tab-bar,
+  .added-toast,
+  .appbar-title .store-logo,
+  .appbar-subtitle,
+  .carousel-dots span,
+  .gallery-dots span,
+  .phone-shortcut > span,
+  .product-card-media,
+  .category-tile,
+  .event-card,
+  .brand-tile {
+    animation: none !important;
+    transition-property: opacity, color, background-color !important;
+  }
+  .added-toast {
+    scale: 1 !important;
+    translate: none !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+/* Keyboard users never wait on motion (matches storefront.css). */
+html[data-input="keyboard"] :is(.tab-bar, .tab-indicator, .added-toast, .app-root) {
+  transition-duration: 0ms !important;
+}
+/* Reduced transparency / more contrast: solid chrome instead of glass. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root {
+    --glass: #ffffff;
+    --glass-blur: none;
+  }
+  .tab-bar {
+    box-shadow:
+      0 0 0 1px var(--sf-line-strong),
+      0 10px 24px -12px rgb(20 22 20 / 30%);
+  }
+  .gallery-dots,
+  .gallery-share {
+    background: white;
+    backdrop-filter: none;
+  }
+}

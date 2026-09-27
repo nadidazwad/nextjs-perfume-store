@@ -10,6 +10,7 @@ import {
 import type { CartLine, CartQuote } from "@/lib/cart/schema";
 import { revalidateCart } from "@/lib/cart/actions";
 import { storeConfig } from "../../../store.config";
+import { isPhone } from "./device";
 const KEY = "attar-cart-v1";
 const COUPON_KEY = "attar-coupon-v1";
 const empty: CartQuote = {
@@ -35,6 +36,8 @@ type CartContextValue = CartQuote & {
   couponCode: string;
   applyCoupon: (code: string) => Promise<{ ok: boolean; message: string }>;
   removeCoupon: () => Promise<void>;
+  /** The last successful add; phones confirm it with a toast instead of opening the bag. */
+  lastAdded: { id: number; variantId: string } | null;
 };
 /**
  * Shape check for browser-stored lines, mirroring cartSchema without shipping
@@ -70,6 +73,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     revision = useRef(0),
     coupon = useRef("");
   const [couponCode, setCouponCode] = useState("");
+  const [lastAdded, setLastAdded] = useState<CartContextValue["lastAdded"]>(null);
   const saveCoupon = useCallback((code: string) => {
     coupon.current = code;
     setCouponCode(code);
@@ -172,8 +176,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             : item,
         )
       : [...lines.current, line];
-    setOpen(true);
-    await update(next);
+    // Tablets and desktops open the bag at once; phones stay put and show a toast when it lands.
+    const phone = isPhone();
+    if (!phone) setOpen(true);
+    const result = await update(next);
+    if (!phone) return;
+    if (result?.quote?.items.some((item) => item.variantId === line.variantId))
+      setLastAdded((last) => ({ id: (last?.id ?? 0) + 1, variantId: line.variantId }));
+    else setOpen(true); // the bag explains what went wrong
   };
   const change = async (id: string, qty: number) => {
     if (locked.current) return;
@@ -232,6 +242,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         couponCode,
         applyCoupon,
         removeCoupon,
+        lastAdded,
         count: quote.items.reduce((sum, item) => sum + item.qty, 0),
       }}
     >

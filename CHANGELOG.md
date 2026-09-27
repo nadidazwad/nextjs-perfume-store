@@ -1,5 +1,42 @@
 # Changelog
 
+## Unreleased
+
+**The storefront feels like an app on phones** (≤760 px; tablets and desktops
+are unchanged). A floating glass tab bar (Home, Shop, Search, Saved, Bag)
+replaces the header icons; its highlight glides between tabs and it slims down
+while you scroll. The header becomes a navigation bar: a back button, and the
+page title fades in once the page's own large title scrolls under it.
+Bag, Shop, Filters and the wishlist open as bottom sheets you can drag or
+flick away, and the page scales back behind them like an iOS page sheet.
+Adding to the bag shows an "Added to bag" toast instead of opening the bag.
+Product pages get edge-to-edge photos you swipe through (with page dots, a
+share button where the phone has a share sheet, and a full-screen viewer),
+and the details ride up over the photo as a sheet. Tapping a product card
+pushes the product page in from the right, its photo morphing into the
+gallery, and the back button pops it (View Transitions; browsers without them
+just navigate). Listings get one sticky, swipeable row of Filters, Sort and
+one-tap toggles; checkout docks the total and "Place order" at the bottom;
+the home page gets a photo hero with page dots, round category shortcuts and
+peeking carousels. The store can be installed to the home screen (web app
+manifest, generated icon, safe areas for notched phones). Short vibrations
+on Android confirm adds and taps. Reduced motion, reduced transparency and
+keyboard use all get calmer fallbacks. See "Phone app shell" in
+`docs/DESIGN_SYSTEM.md`.
+
+The store's logo stays centred in the phone nav bar on every page, with the
+page name appearing under it as you scroll. A load bar along the nav bar
+starts the moment a link is tapped. Touchscreens no longer get hover styles
+that stay stuck after a tap.
+
+**Testing on a phone:** `pnpm dev` now serves its scripts, and admin sign-in
+works, when opened from this machine's own LAN address
+(`http://192.168.x.x:3000`). Before, pages loaded but nothing interactive
+worked. Development only; production is unchanged.
+
+**Fix:** the admin sign-in form posts instead of defaulting to GET, so if its
+script ever fails to load, the password can't end up in the URL.
+
 ## v0.3.0 (2026-09-27)
 
 **Product cards, rebuilt** in the admin panel's language: a grey panel with

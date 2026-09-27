@@ -27,7 +27,10 @@ Package manager: **pnpm**.
 ## Commands
 
 ```bash
-pnpm dev          # start dev server (works with NO .env file at all)
+pnpm dev          # start dev server (works with NO .env file at all); to test
+                  # on a phone, open http://<this machine's LAN IP>:3000 on
+                  # the same Wi-Fi (dev allows its own private IPs:
+                  # src/lib/dev-origins.ts)
 pnpm build        # production build — must stay green
 pnpm lint         # eslint
 pnpm typecheck    # tsc --noEmit
@@ -59,6 +62,10 @@ src/
     globals.css              Tailwind + shadcn theme base only
     storefront.css           Storefront design system (tokens at top)
     commerce.css             Cart / checkout / order tracking
+    app-shell.css            Phone-only (≤760px) app shell: tab bar, nav bar,
+                             bottom sheets, page transitions
+    (storefront)/template.tsx  View-transition wrapper (push/pop on phones)
+    manifest.ts apple-icon.tsx pwa-icon/  home-screen install
     api/                     auth catch-all, uploads, search/suggest ONLY
                              (all other mutations are Server Actions)
     uploads/[key]/route.ts   serves local-adapter images from .data/uploads
@@ -72,6 +79,10 @@ src/
                              ui.tsx = Breadcrumbs, SectionHead, Stars
                              nav.tsx  header rail, mega menus, phone menu
                              quick-add.tsx  card "add this size" button
+                             app-shell.tsx  phone tab bar, back button,
+                             collapsing title, added-to-bag toast
+                             sheet-drag.tsx drag-to-dismiss bottom sheets
+                             device.ts      usePhone, haptic
                              search-suggest.tsx  header combobox (ST-08)
                              product-reviews.tsx + review-form.tsx (ST-17)
                              saved-products.ts   localStorage wishlist/recent

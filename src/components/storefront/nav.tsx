@@ -33,6 +33,9 @@ import { label } from "@/lib/catalog/labels";
 import { storeConfig } from "../../../store.config";
 import { Media } from "./media";
 import { SearchForm } from "./search-suggest";
+import { SheetGrabber } from "./sheet-drag";
+import { usePhone } from "./device";
+import { menuStore, useMenuOpen } from "./app-shell";
 
 /* Serializable nav data built by the server header (shell.tsx). Icons are
    looked up by key here, because components can't cross the server boundary. */
@@ -248,7 +251,9 @@ export function MobileMenu({
   collections: CollectionLink[];
   brands: Pick<BrandMenuItem, "id" | "name" | "href">[];
 }) {
-  const [open, setOpen] = useState(false);
+  const open = useMenuOpen();
+  const setOpen = menuStore.set;
+  const phone = usePhone();
   const path = usePathname();
   const current = (href: string) => (href === path ? "page" : undefined);
   return (
@@ -256,9 +261,10 @@ export function MobileMenu({
       <SheetTrigger className="icon-button mobile-only" aria-label="Open menu">
         <Menu size={19} />
       </SheetTrigger>
-      <SheetContent side="left" className="store-sheet menu-sheet" showCloseButton={false}>
+      <SheetContent side={phone ? "bottom" : "left"} className="store-sheet menu-sheet" showCloseButton={false}>
+        <SheetGrabber onDismiss={() => setOpen(false)} />
         <div className="menu-sheet-head">
-          <SheetTitle className="store-logo">{storeConfig.store.name}</SheetTitle>
+          <SheetTitle className="store-logo">{phone ? "Shop" : storeConfig.store.name}</SheetTitle>
           <SheetClose className="icon-button" aria-label="Close menu">
             <X size={18} />
           </SheetClose>

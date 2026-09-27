@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { ugcRel } from "@/lib/demo/links";
 import {
@@ -17,6 +18,7 @@ import { StoreCarousel } from "./carousel";
 import { ProductCard } from "./product-card";
 import { Media } from "./media";
 import { SectionHead } from "./ui";
+import { shop, shopIcons } from "./shell";
 
 /*
  * Homepage sections render in the order set in Admin → Homepage.
@@ -96,7 +98,7 @@ async function HomeSection({ section: s }: { section: Section }) {
         <SectionHead title={s.title ?? "Shop by category"} description={s.subtitle} />
         <div className="category-grid">
           {s.config.tiles?.map((tile) => (
-            <Link key={tile.href} href={tile.href} rel={ugcRel(tile.href)} className="category-tile">
+            <Link key={tile.href} href={tile.href} rel={ugcRel(tile.href)} transitionTypes={["nav-forward"]} className="category-tile">
               <Media src={tile.imageUrl} alt="" sizes="(max-width: 700px) 50vw, 25vw" />
               <span className="category-tile-label">
                 {tile.title}
@@ -209,6 +211,25 @@ async function HomeSection({ section: s }: { section: Section }) {
   return null;
 }
 
+/** Phones only: a row of round shortcuts under the hero, like an app's category strip. */
+function PhoneShortcuts() {
+  return (
+    <nav className="phone-shortcuts" aria-label="Shop by">
+      {shop.map((link) => {
+        const Icon = shopIcons[link.key];
+        return (
+          <Link key={link.key} href={link.href} transitionTypes={["nav-forward"]} className="phone-shortcut" data-tone={link.key === "deals" ? "deal" : undefined}>
+            <span aria-hidden>
+              <Icon size={22} strokeWidth={1.6} />
+            </span>
+            {link.key === "all" ? "All" : link.key === "new" ? "New" : link.name}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 function FallbackHero() {
   return (
     <section className="hero">
@@ -231,8 +252,12 @@ export async function Homepage() {
   return (
     <div className="store-width home-page">
       {sections.some((s) => s.type === "hero") ? null : <FallbackHero />}
+      {!sections.some((s) => s.type === "hero") && <PhoneShortcuts />}
       {sections.map((section) => (
-        <HomeSection key={section.id} section={section} />
+        <Fragment key={section.id}>
+          <HomeSection section={section} />
+          {section.id === sections.find((s) => s.type === "hero")?.id && <PhoneShortcuts />}
+        </Fragment>
       ))}
       {storeConfig.features.recentlyViewed && <RecentlyViewed />}
     </div>
