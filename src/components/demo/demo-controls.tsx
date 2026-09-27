@@ -161,6 +161,7 @@ function Copy({ value, label }: { value: string; label: string }) {
 }
 
 export function DemoStartButton() {
+  const router = useRouter();
   const [result, setResult] = useState<DemoStart | null>(null);
   const [pending, start] = useTransition();
   if (result?.ok)
@@ -194,7 +195,14 @@ export function DemoStartButton() {
         type="button"
         className="button primary lg"
         disabled={pending}
-        onClick={() => start(async () => setResult(await startDemo()))}
+        onClick={() =>
+          start(async () => {
+            const started = await startDemo();
+            setResult(started);
+            // Bring the demo bar up to date; the login stays on screen.
+            if (started.ok) router.refresh();
+          })
+        }
       >
         {pending ? "Copying the store for you…" : "Start my demo store"}
       </button>
