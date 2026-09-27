@@ -13,8 +13,9 @@ Bangladesh-style markets, deployable entirely on free tiers.
 | `docs/research/jomashop-findings.md` | UX reference: what Jomashop does and how we adapt it |
 | `store.config.ts` | All store branding/behavior. Retailers edit this, not components |
 | `.env.example` | Every env var, documented. Validation in `src/lib/env.ts` |
-| `docs/deploy/*.md` | Vercel + Neon, Docker, storage (R2/S3), notifications (Telegram/Resend) |
-| `docs/PHASE_6_VERIFICATION.md` | Latest security, performance and release verification |
+| `docs/deploy/*.md` | Vercel + Neon, Docker, storage (R2/S3), notifications (Telegram/Resend), public demo (`DEMO_MODE`) |
+| `docs/PHASE_6_VERIFICATION.md` | Security, performance and release verification |
+| `docs/PHASE_7_VERIFICATION.md` | Public demo with sandboxed admin (`DEMO_MODE`): design, tests, live checks |
 
 ## Stack
 
@@ -30,7 +31,8 @@ pnpm dev          # start dev server (works with NO .env file at all)
 pnpm build        # production build — must stay green
 pnpm lint         # eslint
 pnpm typecheck    # tsc --noEmit
-pnpm test         # node:test suites in tests/ (DB tests use a throwaway PGlite)
+pnpm test         # node:test suites in tests/ (DB tests use a throwaway PGlite;
+                  # demo sandbox tests need TEST_POSTGRES_URL, else they skip)
 pnpm db:generate  # generate a SQL migration from schema.ts changes
 pnpm db:migrate   # apply migrations: PGlite locally, DATABASE_URL otherwise
 pnpm db:seed      # idempotent demo seed + admin user; --admin-only (or
@@ -72,13 +74,16 @@ src/
                              product-reviews.tsx + review-form.tsx (ST-17)
                              saved-products.ts   localStorage wishlist/recent
                              wishlist.tsx, recently-viewed.tsx (ST-14)
+    demo/                    demo bar + /demo controls (DEMO_MODE only)
     admin/                   admin components; ui.tsx (PageHeader, Panel,
                              StatusBadge…), fields.tsx (ImageField, Switch,
                              Chips, ConfirmButton), combobox.tsx,
                              coupon-editor.tsx, review-queue.tsx
   db/
     schema.ts                All tables (spec: docs/SPEC.md §4)
-    index.ts                 db client — ALWAYS import { db } from here
+    index.ts                 db client — ALWAYS import { db } from here;
+                             publicDb = never sandbox-routed (auth, rate limits)
+    sandbox-router.ts        DEMO_MODE only: routes db per request to a sandbox
     seed.ts                  demo seed (seed-data.ts, seed-assets.ts)
     migrations/              generated SQL, committed; applied by db:migrate
   lib/
@@ -100,6 +105,8 @@ src/
     reviews/                 schema (input + summary), server (verified
                              purchase, PDP data, card ratings), actions
     notify/                  console | resend | telegram adapters
+    demo/                    DEMO_MODE public demo: sandbox lifecycle, signed
+                             cookie, actions (start/reset/end/resume), uploads
     storage/                 local (.data/uploads) | s3 (R2-compatible)
   proxy.ts                   admin cookie redirect + flag-off 404s
 tests/                       node:test suites (pnpm test)
@@ -148,6 +155,11 @@ vercel.json                  points Vercel at scripts/vercel-build.sh
     `store.config.ts` (its schema is a function) and `catalog/labels.ts`,
     not `catalog/params.ts` or other schema modules. Load a schema lazily
     (`import()`) if a client form needs it.
+14. **Every new table is classified for demo sandboxes.** Add it to
+    `sandboxTables` (store data, copied per visitor) or `publicOnlyTables`
+    (auth-like, never copied) in `schema.ts`; `tests/sandbox.test.ts` fails
+    otherwise. Code reading auth or rate-limit tables uses `publicDb`.
+    With `DEMO_MODE` off, real stores must behave exactly as before.
 
 ## Common recipes
 
@@ -179,7 +191,8 @@ vercel.json                  points Vercel at scripts/vercel-build.sh
   `docs/deploy/notifications.md`. Never log provider responses.
 - **Schema change**: edit `src/db/schema.ts` → `pnpm db:generate` (commit the
   new file in `src/db/migrations/`) → `pnpm db:migrate` → update
-  `src/db/seed.ts` if the shape affects seeded data. Vercel production
+  `src/db/seed.ts` if the shape affects seeded data. A new table also goes into `sandboxTables` or
+  `publicOnlyTables` (invariant 14). Vercel production
   deploys and the Docker `setup` service apply migrations automatically.
 
 - **Coupons**: rules live in `src/lib/coupons/rules.ts` (pure). The cart

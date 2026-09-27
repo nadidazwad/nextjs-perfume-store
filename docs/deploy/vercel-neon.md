@@ -106,6 +106,11 @@ Before you announce the store:
   `NEXT_PUBLIC_APP_URL` to it and redeploy.
 - **Move off Hobby** (see the warning at the top).
 
+## A public demo with a sandboxed admin
+
+To let visitors try the admin on their own private copy of the store, see
+[public-demo.md](public-demo.md) (`DEMO_MODE`). Never on a real store.
+
 ## Updating
 
 Pull changes from upstream into your fork. Each production deploy applies new
