@@ -10,6 +10,13 @@ uploads are visible only to that visitor; Reset and End are one click; expired
 copies are removed automatically. Real stores are unaffected.
 See `docs/deploy/public-demo.md`.
 
+**Security:** pages now send a `script-src` Content-Security-Policy with a
+per-request nonce (`'strict-dynamic'`), so only Next's own scripts run.
+
+**Maintenance:** Next 16.3.6, React 19.3, drizzle-orm 0.45.3, TypeScript 6,
+`@types/node` aligned with the Node 24 runtime, CI actions updated. The unused
+product-name GIN index is dropped (migration 0005).
+
 ## v0.1.0 (2026-09-27)
 
 The first public release.

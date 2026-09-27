@@ -203,11 +203,12 @@ deploy guide), schema change (generate + migrate).
 - **Simulated LCP on Lighthouse's default slow-4G profile is ~2.9–3.0 s.**
   What remains is mostly the React and Next.js runtime. On a 4G profile, LCP
   is 1.1–1.2 s.
-- **The product-name GIN index is unused**, as described above. Options: add
+- **The product-name GIN index is unused**, as described above. *Dropped
+  after Phase 7 (migration 0005).* Options: add
   trigram indexes (`pg_trgm`, which PGlite loads differently) or drop the
   index. Left as is pending a decision.
 - **No `script-src` CSP.** Next's inline scripts would need per-request
-  nonces.
+  nonces. *Added after Phase 7: see PHASE_7_VERIFICATION.md.*
 - **Client IP needs a proxy.** The last `X-Forwarded-For` hop is trusted.
   Vercel, Caddy and nginx set it. With port 3000 exposed directly, clients can
   choose their IP. Per-phone limits still apply. The Docker guide says so.

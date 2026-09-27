@@ -108,7 +108,8 @@ src/
     demo/                    DEMO_MODE public demo: sandbox lifecycle, signed
                              cookie, actions (start/reset/end/resume), uploads
     storage/                 local (.data/uploads) | s3 (R2-compatible)
-  proxy.ts                   admin cookie redirect + flag-off 404s
+  proxy.ts                   per-request CSP script nonce (lib/csp.ts), admin
+                             cookie redirect, flag-off 404s
 tests/                       node:test suites (pnpm test)
 scripts/                     vercel-build.sh (migrate+seed on production
                              deploys only), verify-storefront.mjs (smoke)
@@ -154,7 +155,8 @@ vercel.json                  points Vercel at scripts/vercel-build.sh
 13. **Keep Zod out of storefront bundles.** Client components may import
     `store.config.ts` (its schema is a function) and `catalog/labels.ts`,
     not `catalog/params.ts` or other schema modules. Load a schema lazily
-    (`import()`) if a client form needs it.
+    (`import()`) if a client form needs it. Import `z` from `@/lib/zod` (lint
+    enforces it): it turns off Zod's eval, which the page CSP blocks.
 14. **Every new table is classified for demo sandboxes.** Add it to
     `sandboxTables` (store data, copied per visitor) or `publicOnlyTables`
     (auth-like, never copied) in `schema.ts`; `tests/sandbox.test.ts` fails
