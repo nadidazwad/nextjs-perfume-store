@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.3.0 (2026-09-27)
+
+**Product cards, rebuilt** in the admin panel's language: a grey panel with
+the photo and a white info plate. Cards now show concentration, size and how
+many sizes are on offer as tags, flag stock only when it's low or sold out,
+and have a quick-add button that puts the shown size in the bag (it widens to
+"Add 50 ml" on hover). The whole card is one link, so it's a single tab stop.
+
+**Navigation, rebuilt.** The desktop row is a grey rail whose highlight
+glides to the item under the pointer. "Shop" and "Brands" open full-width
+panels: ways to shop and collections as icon-tile rows with a featured
+collection, and every brand as a monogram tile beside its lead fragrance.
+Track order and Deals sit on the right. The phone menu follows the admin
+sidebar: labelled groups of icon-tile rows, brands as a tile grid, and a
+call/WhatsApp card at the bottom.
+
+**Motion and micro-interactions:** the wishlist heart fills with a scale-in,
+header counts pop when they go up, checkboxes tick in, the free-delivery bar
+glides, messages and coupon cards ease in, skeletons shimmer, the review
+dialog opens with the lightbox's transition, "Clear all" shows its 4-second
+window, and order confirmation and a sent review get a self-drawing tick.
+Admin gets a sliding Write/Preview pill, animated checkboxes and press
+feedback on chips and tabs. Everything is CSS transitions or small keyframes
+on transform/opacity; keyboard use stays instant and reduced motion keeps
+fades only.
+
 ## v0.2.0 (2026-09-27)
 
 **Public demo with a sandboxed admin** (`DEMO_MODE`, off by default): on a
