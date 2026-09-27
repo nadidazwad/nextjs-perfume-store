@@ -20,6 +20,13 @@ Vercel builds and serves the app.
 
 1. In Neon, create a project. Pick the region closest to your customers
    (for Bangladesh, *AWS Asia Pacific (Singapore)*).
+
+   > [!IMPORTANT]
+   > Vercel runs your server code in Washington, D.C. (`iad1`) unless you
+   > change it. Keep the app and the database together: either pick Neon's
+   > *AWS US East 1 (N. Virginia)*, or after importing on Vercel set
+   > **Settings → Functions → Function Region** to the region matching your
+   > database (Singapore is `sin1`). Otherwise every query crosses an ocean.
 2. On the project dashboard, click **Connect**. Keep **Connection pooling**
    switched on and copy the connection string. It looks like
    `postgresql://neondb_owner:…@ep-…-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require`.
@@ -114,3 +121,4 @@ it at a separate Neon branch.
 | Can't sign in to `/admin` after changing the domain | `NEXT_PUBLIC_APP_URL` must match the address in the browser. Update it and redeploy |
 | "Too many attempts" at checkout while testing | Limits are per phone and per address for 15 minutes. Wait, or use another phone number |
 | Build fails at `db:migrate` | Check that `DATABASE_URL` is the full Neon string including `?sslmode=require` |
+| `ETIMEDOUT` after about a second when you run `pnpm db:migrate` or `db:seed` **from your own computer** against a faraway database | Node gives each server address only 250 ms to answer. Allow more: `NODE_OPTIONS=--network-family-autoselection-attempt-timeout=2000 pnpm db:migrate`. Vercel isn't affected when the app and database share a region |
