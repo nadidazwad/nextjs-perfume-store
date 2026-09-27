@@ -33,3 +33,12 @@ export function setSandboxCookie(jar: CookieJar, secret: string, id: string, exp
     expires: expiresAt,
   });
 }
+
+/**
+ * DEMO_MODE: storefront writes (orders, reviews) need a sandbox. Public is
+ * copied into every sandbox, so a stranger's typed name and phone would
+ * otherwise be shown to every later demo visitor.
+ */
+export async function demoWriteRefused(source: Headers) {
+  return env.DEMO_MODE && !(await requestSandbox(source));
+}

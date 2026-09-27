@@ -148,3 +148,10 @@ test("with DEMO_MODE off, suggest stays CDN-cacheable and links carry no ugc rel
   const { ugcRel } = await import("../src/lib/demo/links");
   assert.equal(ugcRel("https://example.com"), undefined);
 });
+
+test("with DEMO_MODE off, storefront writes and the cleanup cron behave as before", async () => {
+  const { demoWriteRefused } = await import("../src/lib/demo/session");
+  assert.equal(await demoWriteRefused(new Headers()), false);
+  const { GET } = await import("../src/app/api/cron/demo-cleanup/route");
+  assert.equal((await GET(new Request("http://localhost/api/cron/demo-cleanup"))).status, 404);
+});

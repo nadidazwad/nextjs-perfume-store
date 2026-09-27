@@ -12,7 +12,7 @@ import { authSecret, env } from "@/lib/env";
 import { createId } from "@/lib/id";
 import { clientIp, takeRateLimit } from "@/lib/rate-limit";
 import { SANDBOX_COOKIE } from "./cookie";
-import { createSandbox, dropSandboxes, resetSandbox } from "./sandbox";
+import { createSandbox, dropExpiredSandboxes, dropSandboxes, resetSandbox } from "./sandbox";
 import { requestSandbox, setSandboxCookie } from "./session";
 
 /**
@@ -31,6 +31,8 @@ export async function startDemo(): Promise<DemoStart> {
   const source = await headers();
   if (!(await takeRateLimit("demo-start", clientIp(source), 3, 60 * 60_000)))
     return { ok: false, message: "You've started 3 demos in the last hour. Please try again later." };
+  // Lazy cleanup; the daily cron (/api/cron/demo-cleanup) is the backstop.
+  await dropExpiredSandboxes().catch(() => {});
   const userId = createId();
   const email = `demo-${randomBytes(5).toString("hex")}@demo.invalid`;
   const password = randomBytes(12).toString("base64url");

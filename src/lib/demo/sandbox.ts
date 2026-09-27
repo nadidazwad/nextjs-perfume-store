@@ -150,6 +150,12 @@ export async function dropExpiredSandboxes(now = new Date()) {
     await tx`select pg_advisory_xact_lock(${LOCK})`;
     const rows = await tx<{ id: string }[]>`select id from public.demo_sandboxes where expires_at <= ${now.toISOString()}::timestamptz`;
     await dropInside(tx, rows.map((row) => row.id));
+    // Schemas and registry rows are created and dropped in one transaction, so a
+    // sandbox schema without a row can only be debris: remove it.
+    const orphans = await tx<{ name: string }[]>`
+      select nspname as name from pg_namespace
+      where nspname ~ '^demo_[a-z0-9]{16}$' and substr(nspname, 6) not in (select id from public.demo_sandboxes)`;
+    for (const { name } of orphans) await tx.unsafe(`drop schema ${quote(name)} cascade`);
     await tx`delete from public."user" u where u.role = 'demo'
       and u.created_at < ${now.toISOString()}::timestamptz - interval '10 minutes'
       and not exists (select 1 from public.demo_sandboxes d where d.user_id = u.id)`;

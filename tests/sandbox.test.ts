@@ -39,7 +39,7 @@ before(async () => {
   await admin.unsafe(`create database ${name}`);
   const url = new URL(base!);
   url.pathname = `/${name}`;
-  Object.assign(process.env, { NODE_ENV: "test", DATABASE_URL: url.toString(), DEMO_MODE: "true", BETTER_AUTH_SECRET: secret });
+  Object.assign(process.env, { NODE_ENV: "test", DATABASE_URL: url.toString(), DEMO_MODE: "true", BETTER_AUTH_SECRET: secret, CRON_SECRET: "cron-secret-0123456789" });
   delete process.env.DATABASE_URL_DIRECT;
   // Neon: TEST_POSTGRES_URL is the pooled URL, this one the direct URL (sandboxes use it).
   if (process.env.TEST_POSTGRES_DIRECT_URL) {
@@ -391,4 +391,33 @@ test("in demo mode, suggest responses are never shareable and outbound links are
   const { ugcRel } = await import("../src/lib/demo/links");
   assert.equal(ugcRel("https://example.com/x"), "nofollow ugc");
   assert.equal(ugcRel("/products"), undefined);
+});
+
+test("in demo mode, storefront writes need a sandbox so strangers' details never reach public", { skip }, async () => {
+  await fresh();
+  const box = await lifecycle.createSandbox("demo-a");
+  const { demoWriteRefused } = await import("../src/lib/demo/session");
+  assert.equal(await demoWriteRefused(new Headers()), true);
+  assert.equal(await demoWriteRefused(visitor("token-a.sig")), true);
+  assert.equal(await demoWriteRefused(visitor("token-a.sig", signSandboxCookie(secret, box.id, box.expiresAt, "token-a.sig"))), false);
+});
+
+test("the cleanup cron needs its secret and removes expired sandboxes, demo users and orphan schemas", { skip }, async () => {
+  await fresh();
+  const { GET } = await import("../src/app/api/cron/demo-cleanup/route");
+  const call = (auth?: string) => GET(new Request("http://localhost/api/cron/demo-cleanup", { headers: auth ? { authorization: auth } : {} }));
+  assert.equal((await call()).status, 401);
+  assert.equal((await call("Bearer wrong-secret-0123456789")).status, 401);
+  const expired = await lifecycle.createSandbox("demo-a");
+  const live = await lifecycle.createSandbox("demo-b");
+  await raw`update public.demo_sandboxes set expires_at = now() - interval '1 minute' where id = ${expired.id}`;
+  await raw.unsafe("create schema demo_orphanorphan2345");
+  await raw`insert into public."user" (id, name, email, role, created_at) values ('stray', 'Stray', 'stray@demo.invalid', 'demo', now() - interval '1 hour')`;
+  const response = await call("Bearer cron-secret-0123456789");
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { removed: 1 });
+  const schemas = (await raw`select nspname from pg_namespace where nspname like 'demo\\_%'`).map((row) => row.nspname);
+  assert.deepEqual(schemas, [live.schema]);
+  assert.equal((await raw`select count(*)::int as n from public."user" where id in ('demo-a', 'stray')`)[0].n, 0);
+  assert.equal((await raw`select count(*)::int as n from public."user" where id = 'demo-b'`)[0].n, 1);
 });

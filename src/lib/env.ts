@@ -39,6 +39,8 @@ const envSchema = z
       .enum(["true", "false", ""])
       .default("false")
       .transform((value) => value === "true"),
+    /** Vercel Cron sends it as a bearer token; the demo cleanup job requires it. */
+    CRON_SECRET: z.string().min(16).optional(),
 
     /** Absolute URL of the deployed site. */
     NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),

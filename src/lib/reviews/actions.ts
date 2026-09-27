@@ -1,4 +1,5 @@
 "use server";
+import { demoWriteRefused } from "@/lib/demo/session";
 import { headers } from "next/headers";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
@@ -15,6 +16,8 @@ export type ReviewResult =
 /** Guest review submission. Lands as `pending`; nothing is public until approved. */
 export async function submitReview(input: unknown): Promise<ReviewResult> {
   if (!storeConfig.features.reviews) return { ok: false, message: "Reviews aren't available." };
+  if (await demoWriteRefused(await headers()))
+    return { ok: false, message: "This is a demo store. Start your own demo store (Try the admin, at the top) to write reviews." };
   if (!(await takeRateLimit("review-ip", clientIp(await headers()), 5)))
     return { ok: false, message: "You've sent several reviews recently. Please try again later." };
   const parsed = reviewInputSchema.safeParse(input);

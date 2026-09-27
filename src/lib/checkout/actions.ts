@@ -1,4 +1,5 @@
 "use server";
+import { demoWriteRefused } from "@/lib/demo/session";
 import { after } from "next/server";
 import { cookies, headers } from "next/headers";
 import { eq } from "drizzle-orm";
@@ -10,6 +11,8 @@ import { clientIp, takeRateLimit } from "@/lib/rate-limit";
 import { notifyNewOrder } from "@/lib/notify";
 import { getPublicOrder } from "@/lib/orders/public-order";
 export async function placeOrder(input: unknown) {
+  if (await demoWriteRefused(await headers()))
+    return { error: "This is a demo store. Start your own demo store (Try the admin, at the top) to place orders." };
   if (!(await takeRateLimit("checkout-ip", clientIp(await headers()), 20)))
     return {
       error: "Too many attempts. Please wait 15 minutes before trying again.",

@@ -82,7 +82,7 @@ export function DemoBarView({
       <div className="demo-bar" data-state={stale ? "ended" : "visitor"}>
         <p>
           <span className="demo-dot" aria-hidden />
-          {stale ? "Your demo store has ended." : "Demo store: orders aren't real."}
+          {stale ? "Your demo store has ended." : "This is a demo store."}
         </p>
         <Link className="demo-bar-btn solid" href="/demo">
           {stale ? "Start a new one" : "Try the admin"}
