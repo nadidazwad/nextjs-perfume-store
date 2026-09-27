@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.2.0 (2026-09-27)
 
 **Public demo with a sandboxed admin** (`DEMO_MODE`, off by default): on a
 showcase deployment, any visitor can open `/demo` and get a private copy of

@@ -233,12 +233,22 @@ wrong-secret and garbage cookies fall back to the shared client.
 - `scripts/verify-demo.mjs` needs `playwright-core` and a Chromium binary,
   installed outside the project, so it isn't part of CI.
 
+## Follow-ups after Phase 7 (same day)
+
+| Item | What was done | Checked by |
+|---|---|---|
+| Neon password rotated | `DATABASE_URL` still had the old password, so the redeploy failed at `db:migrate` (`28P01`) and the live site returned 500. Also, `DATABASE_URL_DIRECT` had been given the pooled URL. Both were set from the new URL (pooled / direct), then production was redeployed | both URLs connect; live `verify-demo` 18/18 afterwards |
+| Dependabot #1–#5 | merged together (GitHub Actions versions, Next 16.3.6, React 19.3, drizzle-orm 0.45.3, TypeScript 6); CI conflicts resolved by hand | full gate + Postgres suite locally, `verify-demo` 19/19, CI 80/80 |
+| Dependabot #6 (`@types/node` 26) | closed; `@types/node` pinned to `^24` to match the Node 24 runtime, and Dependabot skips its majors | typecheck |
+| Unused name GIN index | dropped (migration 0005, `IF EXISTS`); SPEC performance line updated | `catalog:verify`; index absent on Neon |
+| `script-src` CSP | `src/proxy.ts` sends every page the base policy plus `script-src 'self' 'nonce-…' 'strict-dynamic'`; APIs and assets keep the base policy. The root 404 renders per request. Zod is imported from `src/lib/zod.ts` (jitless, lint-enforced): its eval probe was the one violation, on `/checkout` | `tests/proxy.test.ts`; 27 pages crawled with a `securitypolicyviolation` listener: 0 violations locally (prod + dev) and live; `verify-storefront` and `verify-demo` pass |
+
 ## Waiting on the maintainer
 
-1. **Revoke the Vercel token** (`~/.vercel-attar-token`) now that
-   deployment is done, and **rotate the Neon password**: the connection
-   string was used from this machine throughout. After rotating, update
-   `DATABASE_URL` and `DATABASE_URL_DIRECT` in Vercel and redeploy.
-2. Optionally watch the first scheduled cleanup run (Vercel → Cron Jobs,
-   after 21:30 UTC).
-3. Optionally tag a release (`CHANGELOG.md` has an Unreleased entry).
+1. **Rotate the Neon password once more** (the current one was pasted into a
+   chat). Update `DATABASE_URL` (pooled) **and** `DATABASE_URL_DIRECT` (the
+   same URL without `-pooler`) in Vercel before redeploying: the old password
+   stops working the moment you rotate.
+2. **Revoke the Vercel token** (`~/.vercel-attar-token`).
+3. Optionally check Vercel → Cron Jobs after 21:30 UTC for the first
+   scheduled cleanup; the test sandboxes still live expire on their own.
