@@ -14,6 +14,8 @@ import { formatMoney } from "@/lib/money";
 import { ProductCard } from "./product-card";
 import { Media } from "./media";
 import { CountBadge } from "./count-badge";
+import { SheetGrabber } from "./sheet-drag";
+import { usePhone } from "./device";
 import { toggleWishlist, useSavedCards, useSavedIds, writeIds } from "./saved-products";
 
 function GridSkeleton({ count }: { count: number }) {
@@ -107,6 +109,7 @@ export function WishlistPage() {
 export function WishlistSheet() {
   const ids = useSavedIds("wishlist");
   const [open, setOpen] = useState(false);
+  const phone = usePhone();
   const { items, loading } = useSavedCards("wishlist", ids, open);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -114,7 +117,8 @@ export function WishlistSheet() {
         <Heart size={18} aria-hidden />
         <CountBadge value={ids.length} hideZero />
       </SheetTrigger>
-      <SheetContent className="store-sheet cart-sheet wishlist-sheet" showCloseButton={false}>
+      <SheetContent side={phone ? "bottom" : "right"} className="store-sheet cart-sheet wishlist-sheet" showCloseButton={false}>
+        <SheetGrabber onDismiss={() => setOpen(false)} />
         <div className="cart-sheet-heading">
           <SheetTitle>
             Wishlist <span className="muted">{ids.length}</span>

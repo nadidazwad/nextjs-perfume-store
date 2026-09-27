@@ -51,6 +51,29 @@ export async function ProductListing({
           : ["minPrice", "maxPrice"].includes(key)
             ? `${key === "minPrice" ? "From" : "Up to"} ${formatMoney(Number(item))}`
             : label(facets[key]?.find((o) => o.value === item)?.label ?? item);
+  // Phones get one-tap toggles beside Filters and Sort (a scrolling chip row, app-shell.css).
+  const genders = (result.params.gender ?? []) as string[];
+  const quick = [
+    ...(["inStock", "deal", "new"] as const)
+      .filter((key) => scope[key] === undefined)
+      .map((key) => ({
+        key,
+        text: key === "inStock" ? "In stock" : key === "deal" ? "On sale" : "New",
+        on: !!result.params[key],
+        href: catalogHref(path, searchParams, { [key]: result.params[key] ? undefined : "true", page: undefined }),
+      })),
+    ...(scope.gender === undefined
+      ? (["men", "women", "unisex"] as const).map((g) => ({
+          key: g,
+          text: label(g),
+          on: genders.includes(g),
+          href: catalogHref(path, searchParams, {
+            gender: genders.includes(g) ? genders.filter((x) => x !== g) : [...genders, g],
+            page: undefined,
+          }),
+        }))
+      : []),
+  ];
   const pages = Array.from({ length: result.pages }, (_, i) => i + 1).filter(
     (page) => page === 1 || page === result.pages || Math.abs(page - result.page) <= 1,
   );
@@ -73,6 +96,13 @@ export async function ProductListing({
               <strong>{result.total}</strong> {result.total === 1 ? "fragrance" : "fragrances"}
             </p>
             <SortSelect value={searchParams.sort ? result.params.sort : ((scope.sort as string) ?? "newest")} />
+            <div className="quick-filters">
+              {quick.map((q) => (
+                <Link key={q.key} href={q.href} scroll={false} className="chip" data-on={q.on || undefined} aria-label={`${q.on ? "Remove filter" : "Filter"}: ${q.text}`}>
+                  {q.text}
+                </Link>
+              ))}
+            </div>
           </div>
           {active.length > 0 && (
             <div className="active-filters" aria-label="Active filters">

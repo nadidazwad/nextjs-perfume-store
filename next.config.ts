@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { validateStoreConfig } from "./store.config";
 import { basePolicy } from "./src/lib/csp";
+import { lanAddresses } from "./src/lib/dev-origins";
 
 // Fail dev, build and start on a bad store.config.ts, before any page renders.
 validateStoreConfig();
@@ -19,6 +20,8 @@ const nextConfig: NextConfig = {
   // Checkout and tracking arguments contain customer contact details.
   logging: { serverFunctions: false },
   poweredByHeader: false,
+  // Test on a phone over Wi-Fi: open http://<this machine's LAN IP>:3000.
+  allowedDevOrigins: lanAddresses(),
   // The Dockerfile sets NEXT_OUTPUT=standalone for a small self-contained image;
   // Vercel and `pnpm start` use the regular output.
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,

@@ -57,7 +57,7 @@ export function ProductCard({
       <div className="product-card-body">
         <p className="product-card-brand">{p.brand.name}</p>
         <h3 className="product-card-name">
-          <Link href={`/products/${p.slug}`} className="product-card-link">
+          <Link href={`/products/${p.slug}`} className="product-card-link" transitionTypes={["nav-forward"]}>
             {p.name}
           </Link>
         </h3>
