@@ -160,10 +160,15 @@ function Copy({ value, label }: { value: string; label: string }) {
   );
 }
 
-export function DemoStartButton() {
+/**
+ * /demo: start button, then the new login. One component for both states, so
+ * the login stays on screen when the page refreshes into "running".
+ */
+export function DemoPanel({ running, renderedAt }: { running: string | null; renderedAt: number }) {
   const router = useRouter();
   const [result, setResult] = useState<DemoStart | null>(null);
   const [pending, start] = useTransition();
+  if (running && !result?.ok) return <RunningSandbox expiresAt={running} renderedAt={renderedAt} />;
   if (result?.ok)
     return (
       <div className="panel demo-credentials" aria-live="polite">

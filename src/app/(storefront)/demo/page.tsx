@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { DemoStartButton, RunningSandbox } from "@/components/demo/demo-controls";
+import { DemoPanel } from "@/components/demo/demo-controls";
 import { hasStaleSandboxCookie, requestSandbox } from "@/lib/demo/session";
 import { SANDBOX_TTL_MS } from "@/lib/demo/sandbox";
 import { env } from "@/lib/env";
@@ -22,17 +22,11 @@ export default async function Page({ searchParams }: PageProps<"/demo">) {
         Get your own copy of this store for {hours} hours. Edit products, confirm and ship orders, rearrange the
         homepage, then see the result in the shop. Nobody else sees your changes.
       </p>
-      {sandbox ? (
-        <RunningSandbox expiresAt={sandbox.expiresAt.toISOString()} renderedAt={renderedAt} />
-      ) : (
-        <>
-          {(ended === "1" || hasStaleSandboxCookie(source)) && (
-            <p className="callout demo-notice">Your previous demo store has ended and was deleted.</p>
-          )}
-          {ended === "0" && <p className="callout demo-notice">Your demo store was deleted. Thanks for trying it.</p>}
-          <DemoStartButton />
-        </>
+      {!sandbox && (ended === "1" || hasStaleSandboxCookie(source)) && (
+        <p className="callout demo-notice">Your previous demo store has ended and was deleted.</p>
       )}
+      {!sandbox && ended === "0" && <p className="callout demo-notice">Your demo store was deleted. Thanks for trying it.</p>}
+      <DemoPanel running={sandbox?.expiresAt.toISOString() ?? null} renderedAt={renderedAt} />
       <ul className="demo-points">
         <li>
           <strong>Private</strong>
