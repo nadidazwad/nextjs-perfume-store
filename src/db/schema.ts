@@ -72,7 +72,6 @@ export const products = pgTable("products", {
   index("products_concentration_idx").on(t.concentration), index("products_packaging_idx").on(t.packaging),
   index("products_family_idx").on(t.fragranceFamily), index("products_active_created_idx").on(t.isActive, t.createdAt),
   index("products_featured_idx").on(t.isFeatured),
-  index("products_name_gin_idx").using("gin", sql`to_tsvector('simple', ${t.name})`),
 ]);
 export const productNotes = pgTable("product_notes", {
   productId: text("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),

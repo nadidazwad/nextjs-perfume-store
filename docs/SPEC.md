@@ -570,7 +570,7 @@ no PII in logs beyond what admins need.
 
 | Area | Requirement |
 |---|---|
-| Performance | PLP/PDP LCP < 2.5 s on mid-range Android over 4G; `next/image` everywhere; PLP queries indexed (brand_id, price, gender, concentration; GIN on product name) |
+| Performance | PLP/PDP LCP < 2.5 s on mid-range Android over 4G; `next/image` everywhere; PLP queries indexed (brand_id, price, gender, concentration). Search matches `ILIKE` across name, brand, description and collection (~120 ms at 20,000 products); a name-only GIN index was dropped as unused (Phase 6 finding) |
 | Accessibility | Semantic landmarks, focus states, alt text enforced in admin, filter sidebar operable by keyboard, WCAG AA contrast for both theme colors (documented check) |
 | SEO | See ST-16. Storefront is fully crawlable server-rendered HTML |
 | Security | See PF-09 + Better Auth defaults; admin cookies httpOnly/secure/sameSite |
