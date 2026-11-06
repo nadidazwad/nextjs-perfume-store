@@ -16,13 +16,14 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { saveProduct } from "@/lib/admin/actions";
+import { deleteProduct, saveProduct } from "@/lib/admin/actions";
 import type { ActionResult, ProductInput } from "@/lib/admin/schema";
 import { formatMoney } from "@/lib/money";
 import { slugify } from "@/lib/slug";
 import { humanize } from "@/lib/admin/format";
 import {
   ChipChoice,
+  ConfirmButton,
   FieldError,
   MarkdownField,
   Result,
@@ -157,6 +158,24 @@ export function ProductEditor({
       }
     });
   }
+  function remove() {
+    if (!id) return;
+    start(async () => {
+      try {
+        const r = await deleteProduct(id);
+        if (r.ok) {
+          toast.success(r.message);
+          router.replace("/admin/products");
+        } else {
+          setResult(r);
+          toast.error(r.message);
+        }
+      } catch {
+        setResult({ ok: false, message: "Unable to delete. Try again." });
+        toast.error("Unable to delete. Try again.");
+      }
+    });
+  }
   const saveRef = useRef(save);
   useEffect(() => {
     saveRef.current = save;
@@ -205,6 +224,17 @@ export function ProductEditor({
         <a className="admin-btn ghost" href={`/products/${initial.slug}`} target="_blank" rel="noreferrer">
           View <ArrowUpRight size={15} />
         </a>
+      )}
+      {id && (
+        <ConfirmButton
+          title="Delete this product?"
+          body="This permanently removes the product and its reviews. Products in orders cannot be deleted; hide those from the store instead."
+          confirmLabel="Delete product"
+          disabled={pending}
+          onConfirm={remove}
+        >
+          <Trash2 size={15} /> Delete
+        </ConfirmButton>
       )}
       {id ? (
         <button className="admin-btn primary" disabled={pending} onClick={() => save()}>

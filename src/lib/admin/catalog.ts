@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   products,
@@ -119,5 +119,37 @@ export async function saveProductRecord(
         .insert(productNotes)
         .values(notes.map((v) => ({ ...v, productId: product.id })));
     return product.id;
+  });
+}
+
+/** Delete only products never ordered; order workflows need their variants. */
+export async function deleteProductRecord(id: string) {
+  return db.transaction(async (tx) => {
+    const [product] = await tx
+      .select({ id: products.id })
+      .from(products)
+      .where(eq(products.id, id))
+      .for("update");
+    if (!product) throw new Error("Product not found.");
+
+    // Checkout locks these rows before inserting order items. Use the same
+    // lock order so a checkout cannot race a product deletion.
+    const variants = await tx
+      .select({ id: productVariants.id })
+      .from(productVariants)
+      .where(eq(productVariants.productId, id))
+      .orderBy(asc(productVariants.id))
+      .for("update");
+    if (variants.length) {
+      const ordered = await tx
+        .select({ id: orderItems.id })
+        .from(orderItems)
+        .where(inArray(orderItems.variantId, variants.map((v) => v.id)))
+        .limit(1);
+      if (ordered.length)
+        throw new Error("This product has orders. Hide it from the store instead.");
+    }
+
+    await tx.delete(products).where(eq(products.id, id));
   });
 }

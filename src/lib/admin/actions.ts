@@ -14,7 +14,7 @@ import {
   type ActionResult,
   type Entity,
 } from "./schema";
-import { saveProductRecord } from "./catalog";
+import { deleteProductRecord, saveProductRecord } from "./catalog";
 import { transitionOrder } from "@/lib/orders/transitions";
 import { notifyTestPing } from "@/lib/notify";
 import { env } from "@/lib/env";
@@ -35,18 +35,21 @@ const validId = (id: unknown): id is string => idSchema.safeParse(id).success;
 function refresh() {
   revalidatePath("/", "layout");
 }
-function failure(error: unknown): ActionResult {
+function failure(
+  error: unknown,
+  fallback = "Unable to save. Check for duplicate slugs, names or SKUs, and linked records.",
+): ActionResult {
   if (error instanceof z.ZodError) return validationFailure(error);
   const message = error instanceof Error ? error.message : "";
   // Driver errors include SQL and values; return a safe message instead.
   return {
     ok: false,
     message:
-      /^(Product not found|A variant|Stock changed|A removed|Order not found|Invalid order|Insufficient stock|Cannot confirm|An ordered|A cancellation|Courier name|A transition)/.test(
+      /^(Product not found|This product has orders|A variant|Stock changed|A removed|Order not found|Invalid order|Insufficient stock|Cannot confirm|An ordered|A cancellation|Courier name|A transition)/.test(
         message,
       )
         ? message
-        : "Unable to save. Check for duplicate slugs, names or SKUs, and linked records.",
+        : fallback,
   };
 }
 export async function saveProduct(
@@ -61,6 +64,17 @@ export async function saveProduct(
     return { ok: true, message: "Product saved.", id: saved };
   } catch (error) {
     return failure(error);
+  }
+}
+export async function deleteProduct(id: string): Promise<ActionResult> {
+  await requireAdmin();
+  if (!validId(id)) return invalidRequest;
+  try {
+    await deleteProductRecord(id);
+    refresh();
+    return { ok: true, message: "Product deleted." };
+  } catch (error) {
+    return failure(error, "Unable to delete. Try again.");
   }
 }
 export async function saveEntity(

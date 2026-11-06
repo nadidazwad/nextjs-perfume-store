@@ -199,6 +199,60 @@ test("an editor cannot move a variant from another product", async () => {
     /does not belong/,
   );
 });
+test("product deletion removes unused catalog rows and protects ordered products", async () => {
+  const unused = await catalog.saveProductRecord(undefined, input());
+  await database.db.insert(s.reviews).values({
+    productId: unused,
+    customerName: "Fixture Shopper",
+    rating: 5,
+    body: "Fixture review",
+  });
+  await catalog.deleteProductRecord(unused);
+  assert.equal((await database.db.select().from(s.products).where(eq(s.products.id, unused))).length, 0);
+  assert.equal((await database.db.select().from(s.productVariants).where(eq(s.productVariants.productId, unused))).length, 0);
+  assert.equal((await database.db.select().from(s.productImages).where(eq(s.productImages.productId, unused))).length, 0);
+  assert.equal((await database.db.select().from(s.reviews).where(eq(s.reviews.productId, unused))).length, 0);
+  await assert.rejects(catalog.deleteProductRecord(unused), /Product not found/);
+
+  const ordered = await catalog.saveProductRecord(undefined, input());
+  const [variant] = await database.db.select().from(s.productVariants).where(eq(s.productVariants.productId, ordered));
+  const [customer] = await database.db.insert(s.customers).values({
+    phone: "+8801712345678", name: "Fixture Shopper",
+  }).returning();
+  const [order] = await database.db.insert(s.orders).values({
+    orderNumber: `ATR-${crypto.randomUUID()}`,
+    customerId: customer.id,
+    customerName: customer.name,
+    customerPhone: customer.phone,
+    shippingAddress: { line1: "Test street", area: "Test area", city: "Dhaka", zone_id: "inside" },
+    deliveryZoneId: "inside",
+    deliveryFee: 0,
+    subtotal: 100,
+    total: 100,
+    paymentMethod: "cod",
+  }).returning();
+  await database.db.insert(s.orderItems).values({
+    orderId: order.id,
+    variantId: variant.id,
+    productName: "Fixture Mist",
+    variantLabel: "50 ml",
+    brandName: "Fixture House",
+    unitPrice: 100,
+    quantity: 1,
+    lineTotal: 100,
+  });
+  await database.db.insert(s.reviews).values({
+    productId: ordered,
+    customerName: "Fixture Shopper",
+    rating: 4,
+    body: "Keep with ordered product",
+  });
+  await assert.rejects(catalog.deleteProductRecord(ordered), /has orders/);
+  assert.equal((await database.db.select().from(s.products).where(eq(s.products.id, ordered))).length, 1);
+  assert.equal((await database.db.select().from(s.productVariants).where(eq(s.productVariants.productId, ordered))).length, 1);
+  assert.equal((await database.db.select().from(s.reviews).where(eq(s.reviews.productId, ordered))).length, 1);
+  assert.equal((await database.db.select().from(s.orderItems).where(eq(s.orderItems.orderId, order.id)))[0].variantId, variant.id);
+});
 test("uploads decode bytes, reject spoofed MIME and enforce image size", async () => {
   const png = await sharp({
     create: { width: 2000, height: 500, channels: 3, background: "#cccccc" },
