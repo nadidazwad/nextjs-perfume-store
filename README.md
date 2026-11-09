@@ -169,9 +169,9 @@ With Docker, run `docker compose up -d --build`. Locally, run
 `pnpm db:migrate`.
 
 **Can AI coding agents work on this?**
-Yes, that's a design goal. [`AGENTS.md`](AGENTS.md) gives agents the map,
-invariants and recipes (add a filter, a homepage section, a notification
-adapter, a feature flag).
+Yes, that's a design goal. [`AGENTS.md`](AGENTS.md) gives agents the
+invariants, and [`CONTRIBUTING.md`](CONTRIBUTING.md) the map and recipes (add a
+filter, a homepage section, a notification adapter, a feature flag).
 
 ## Tech
 
@@ -196,7 +196,7 @@ pnpm db:seed      # idempotent seed; --admin-only for a clean store
 | [docs/SPEC.md](docs/SPEC.md) | The full functional spec: data model and every feature with acceptance criteria |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | Design tokens and UI rules for the storefront and admin |
 | [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) | How it was built, phase by phase |
-| [AGENTS.md](AGENTS.md) | Repo map, invariants and recipes for contributors and AI agents |
+| [AGENTS.md](AGENTS.md) | Invariants for contributors and AI agents; the repo map and recipes are in [CONTRIBUTING.md](CONTRIBUTING.md) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to set up, test and send a pull request |
 
 ## License

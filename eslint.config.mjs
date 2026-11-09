@@ -20,6 +20,21 @@ const eslintConfig = defineConfig([
       "no-restricted-imports": ["error", { paths: [{ name: "zod", message: 'Import { z } from "@/lib/zod" instead.' }] }],
     },
   },
+  {
+    // A direct status write skips the state machine and its order_events row.
+    files: ["src/**"],
+    ignores: ["src/lib/orders/transitions.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.property.name='set'][callee.object.callee.property.name='update']:matches([callee.object.arguments.0.name='orders'],[callee.object.arguments.0.property.name='orders']):has(Property[key.name='status'])",
+          message: "Change order status through src/lib/orders/transitions.ts.",
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
