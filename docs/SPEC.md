@@ -554,7 +554,7 @@ README: 5-minute local quickstart (no accounts), Deploy-to-Vercel button +
 Neon walkthrough (with explicit note: Vercel Hobby is non-commercial —
 test/hobby only), Cloudflare + Docker guides (docs/deploy/*.md, may land
 v2), adapter setup guides (Telegram bot, Resend, R2), FAQ.
-`AGENTS.md` kept in sync as the AI-facing map. GitHub Actions CI:
+`AGENTS.md` and `CONTRIBUTING.md` kept in sync as the AI-facing map. GitHub Actions CI:
 lint + typecheck + build. MIT license.
 
 ### PF-09 · Hardening

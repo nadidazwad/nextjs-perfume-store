@@ -22,7 +22,7 @@ import { shop, shopIcons } from "./shell";
 
 /*
  * Homepage sections render in the order set in Admin → Homepage.
- * Each `type` below maps to one renderer; see AGENTS.md "Add a homepage
+ * Each `type` below maps to one renderer; see CONTRIBUTING.md "Add a homepage
  * section type" to add another.
  */
 type Section = typeof homepageSections.$inferSelect;
