@@ -467,9 +467,10 @@ Slug auto-generated, editable, uniqueness-checked. Zod-validated Server
 Actions; per-field errors.
 **Delete** (existing products): allowed only when every order containing the
 product was cancelled; removes its variants, images, notes and reviews (order
-lines keep their snapshot). Open orders block it (they still need the variants
-for stock); delivered or returned orders block it as sales history. Either way
-the dialog names the reason and offers hide instead.
+lines keep their snapshot). Pending, confirmed or packed orders block it until
+cancelled (they still need the variants for stock); shipped, delivered or
+returned orders block it as sales history. Either way the dialog names the
+reason and offers hide instead.
 
 ### AD-07 · Brands & taxonomy
 `/admin/brands`: CRUD table — name, type, logo upload, hero image, description,

@@ -16,7 +16,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { deleteProduct, saveProduct } from "@/lib/admin/actions";
+import { deleteProduct, productFlags, saveProduct } from "@/lib/admin/actions";
 import type { ActionResult, ProductInput } from "@/lib/admin/schema";
 import type { ProductRemoval } from "@/lib/admin/catalog";
 import { formatMoney } from "@/lib/money";
@@ -88,6 +88,7 @@ function slug(value: string) {
 function DeleteProduct({
   name,
   visible,
+  dirty,
   removal,
   disabled,
   onDelete,
@@ -95,6 +96,8 @@ function DeleteProduct({
 }: {
   name: string;
   visible: boolean;
+  /** Hiding reloads the editor, so it's only offered when there's nothing unsaved to lose. */
+  dirty: boolean;
   removal: ProductRemoval;
   disabled: boolean;
   onDelete: () => void;
@@ -105,23 +108,28 @@ function DeleteProduct({
       <Trash2 size={15} /> Delete product
     </>
   );
-  if (removal.blocked)
+  if (removal.blocked) {
+    const canHide = visible && !dirty;
     return (
       <ConfirmButton
         title="This product can't be deleted"
-        body={`${removal.blocked} ${visible ? "To take it off the store, hide it instead." : "It's already hidden from the store."}`}
-        confirmLabel={visible ? "Hide product" : undefined}
-        onConfirm={visible ? onHide : undefined}
+        body={`${removal.blocked} ${
+          !visible
+            ? "It's already hidden from the store."
+            : dirty
+              ? "To take it off the store, turn off Visible in store and save."
+              : "To take it off the store, hide it instead."
+        }`}
+        confirmLabel={canHide ? "Hide product" : undefined}
+        onConfirm={canHide ? onHide : undefined}
         disabled={disabled}
       >
         {label}
       </ConfirmButton>
     );
+  }
   const sizes = removal.sizes === 1 ? "its size" : `its ${removal.sizes} sizes`;
-  const reviews =
-    storeConfig.features.reviews && removal.reviews
-      ? removal.reviews === 1 ? "1 review" : `${removal.reviews} reviews`
-      : null;
+  const reviews = removal.reviews ? (removal.reviews === 1 ? "1 review" : `${removal.reviews} reviews`) : null;
   return (
     <ConfirmButton
       title={`Delete ${name}?`}
@@ -228,6 +236,20 @@ export function ProductEditor({
       } catch {
         setResult({ ok: false, message: "Unable to delete. Try again." });
         toast.error("Unable to delete. Try again.");
+      }
+    });
+  }
+  function hide() {
+    if (!id) return;
+    start(async () => {
+      try {
+        const r = await productFlags([id], { isActive: false });
+        if (r.ok) {
+          toast.success("Product hidden from the store.");
+          router.refresh();
+        } else toast.error(r.message);
+      } catch {
+        toast.error("Unable to hide. Try again.");
       }
     });
   }
@@ -745,10 +767,11 @@ export function ProductEditor({
                 <DeleteProduct
                   name={initial.name}
                   visible={initial.isActive}
+                  dirty={dirty}
                   removal={removal}
                   disabled={pending}
                   onDelete={remove}
-                  onHide={() => save({ isActive: false })}
+                  onHide={hide}
                 />
               </div>
             )}

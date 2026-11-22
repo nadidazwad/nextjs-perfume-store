@@ -247,10 +247,13 @@ test("a product can be deleted only when every order containing it was cancelled
   assert.equal(line.variantId, null);
   assert.equal(line.productName, "Fixture Mist");
 
-  // Sold before: kept for the sales records.
+  // Shipped or delivered: kept for the sales records, which cancelling another
+  // open order can't change, so that's the reason given.
   const sold = await catalog.saveProductRecord(undefined, input());
-  const delivered = await orderWith(sold, "delivered");
-  assert.equal((await catalog.productRemoval(sold)).blocked, `It was sold in order ${delivered.orderNumber}, so it stays for your sales records.`);
+  await orderWith(sold, "shipped");
+  await orderWith(sold, "delivered");
+  await orderWith(sold, "pending");
+  assert.equal((await catalog.productRemoval(sold)).blocked, "It was sold in 2 orders, so it stays for your sales records.");
   assert.equal((await catalog.deleteProductRecord(sold)).ok, false);
   assert.equal(await exists(sold), true);
 });

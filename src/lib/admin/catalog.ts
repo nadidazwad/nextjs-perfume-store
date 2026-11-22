@@ -10,15 +10,17 @@ import {
   reviews,
   type OrderStatus,
 } from "@/db/schema";
-import { ORDER_TRANSITIONS } from "@/lib/orders/matrix";
+import { ORDER_TRANSITIONS, canTransition } from "@/lib/orders/transitions";
 import { productSchema, type ActionResult } from "./schema";
+import { storeConfig } from "../../../store.config";
 
 type OrderGroup = { count: number; example: string | null };
 /**
- * Orders containing any of these variants. Open orders (any status that can
- * still move) need their variants to confirm or restock. Closed orders keep
- * their own copy of each line, so they only matter as sales history, and
- * cancelled ones not even that.
+ * Orders containing any of these variants, grouped by what they still need:
+ * - open: can still change status, so may still take or restore stock;
+ * - cancellable: can still be cancelled (a test order, say);
+ * - kept: shipped, delivered or returned, which stay as sales history.
+ * Order lines keep their own copy of the product, so cancelled orders need nothing.
  */
 async function orderUsage(executor: DbExecutor, variantIds: string[]) {
   const rows = variantIds.length
@@ -40,24 +42,25 @@ async function orderUsage(executor: DbExecutor, variantIds: string[]) {
       example: matched.map((row) => row.example).filter((n) => n !== null).sort()[0] ?? null,
     };
   };
-  const open = (status: OrderStatus) => ORDER_TRANSITIONS[status].length > 0;
+  const cancellable = (status: OrderStatus) => canTransition(status, "cancelled");
   return {
-    open: group(open),
-    sold: group((status) => !open(status) && status !== "cancelled"),
+    open: group((status) => ORDER_TRANSITIONS[status].length > 0),
+    cancellable: group(cancellable),
+    kept: group((status) => status !== "cancelled" && !cancellable(status)),
   };
 }
 
 const orderCount = (n: number) => (n === 1 ? "order" : `${n} orders`);
-/** Why this product can't be deleted, or null when it can. */
-function deletionBlocker({ open, sold }: Awaited<ReturnType<typeof orderUsage>>) {
-  if (open.count)
-    return open.count === 1
-      ? `Order ${open.example} is still open. If it was a test order, cancel it, then delete the product.`
-      : `It's in ${orderCount(open.count)} that are still open, such as ${open.example}. If they were test orders, cancel them, then delete the product.`;
-  if (sold.count)
-    return sold.count === 1
-      ? `It was sold in order ${sold.example}, so it stays for your sales records.`
-      : `It was sold in ${orderCount(sold.count)}, so it stays for your sales records.`;
+/** Why this product can't be deleted, or null when it can. Sales history first: cancelling can't clear it. */
+function deletionBlocker({ cancellable, kept }: Awaited<ReturnType<typeof orderUsage>>) {
+  if (kept.count)
+    return kept.count === 1
+      ? `It was sold in order ${kept.example}, so it stays for your sales records.`
+      : `It was sold in ${orderCount(kept.count)}, so it stays for your sales records.`;
+  if (cancellable.count)
+    return cancellable.count === 1
+      ? `Order ${cancellable.example} is still open. If it was a test order, cancel it, then delete the product.`
+      : `It's in ${orderCount(cancellable.count)} that are still open, such as ${cancellable.example}. If they were test orders, cancel them, then delete the product.`;
   return null;
 }
 
@@ -71,12 +74,12 @@ export async function productRemoval(productId: string, executor: DbExecutor = d
     .select({ id: productVariants.id })
     .from(productVariants)
     .where(eq(productVariants.productId, productId));
-  const [reviewRows] = await executor
-    .select({ count: count() })
-    .from(reviews)
-    .where(eq(reviews.productId, productId));
+  const [reviewRows] = storeConfig.features.reviews
+    ? await executor.select({ count: count() }).from(reviews).where(eq(reviews.productId, productId))
+    : [];
   return {
     sizes: variants.length,
+    /** Deleted with the product; 0 while reviews are switched off. */
     reviews: Number(reviewRows?.count ?? 0),
     blocked: deletionBlocker(await orderUsage(executor, variants.map((v) => v.id))),
   };
