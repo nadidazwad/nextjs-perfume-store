@@ -42,7 +42,7 @@ export default async function Login() {
             <p className="admin-muted admin-login-demo">
               {env.DEMO_PAUSED ? (
                 <>
-                  Just looking? The live demo is paused for now; <a href={DEMO_REPO_URL}>try it from the repo</a>.
+                  Just looking? The live demo is paused for now; <a href={DEMO_REPO_URL} target="_blank" rel="noreferrer">try it from the repo</a>.
                 </>
               ) : (
                 <>

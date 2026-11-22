@@ -75,7 +75,7 @@ export async function startDemo(): Promise<DemoStart> {
 
 export async function resetDemo(): Promise<Result> {
   if (!env.DEMO_MODE) return unavailable;
-  if (env.DEMO_PAUSED) return paused;
+  if (env.DEMO_PAUSED) return { ok: false, message: "Resetting is paused for now. End still deletes your demo store." };
   const source = await headers();
   const sandbox = await requestSandbox(source);
   const session = getSessionCookie(source);

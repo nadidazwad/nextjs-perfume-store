@@ -98,7 +98,7 @@ export function DemoBarView({
           <span className="demo-dot" aria-hidden />
           The live demo is paused.
         </p>
-        <a className="demo-bar-btn solid" href={DEMO_REPO_URL} target="_blank" rel="noopener">
+        <a className="demo-bar-btn solid" href={DEMO_REPO_URL} target="_blank" rel="noreferrer">
           Try it from the repo
         </a>
       </div>
