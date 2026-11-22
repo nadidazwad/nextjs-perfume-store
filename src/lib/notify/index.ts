@@ -41,7 +41,8 @@ export function orderNotificationText(
     return [
       `${items.reduce((sum, item) => sum + item.quantity, 0)} item(s) | Total: ${formatMoney(order.total)} | Payment: ${order.paymentMethod}`,
       `Details: ${link}`,
-      "Set NOTIFY_ADAPTER=telegram or resend to receive full order alerts.",
+      // The demo never sends order alerts anywhere else, so the hint can't help there.
+      ...(env.DEMO_MODE ? [] : ["Set NOTIFY_ADAPTER=telegram or resend to receive full order alerts."]),
     ].join("\n");
   const address = order.shippingAddress;
   return [

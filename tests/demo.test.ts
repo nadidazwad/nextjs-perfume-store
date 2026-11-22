@@ -142,6 +142,7 @@ test("DEMO_MODE forces order alerts to the console, whatever NOTIFY_ADAPTER says
 
 test("in production, the demo's order alerts reach the log redacted even with NOTIFY_ADAPTER=telegram", () => {
   const script = `
+    globalThis.fetch = async () => { console.log("FETCHED"); return new Response("{\\"ok\\":true}"); };
     require("./src/lib/notify").notifyNewOrder({
       order: { id: "o1", orderNumber: "ATR-1", customerName: "Fixture Buyer", customerPhone: "+8801712345678",
         shippingAddress: { line1: "12 Fixture Road", area: "Gulshan", city: "Dhaka", zone_id: "inside" },
@@ -158,6 +159,7 @@ test("in production, the demo's order alerts reach the log redacted even with NO
     },
   }).stdout;
   assert.match(log, /1 item\(s\)[\s\S]*DONE/);
+  assert.doesNotMatch(log, /FETCHED|NOTIFY_ADAPTER/);
   for (const secret of ["Fixture Buyer", "+8801712345678", "12 Fixture Road"])
     assert.ok(!log.includes(secret), `logged ${secret}`);
 });
