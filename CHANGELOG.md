@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+**Delete products added by mistake** (#14). The product editor's Visibility
+panel has a Delete button. A product can be deleted when no order contains it,
+or every order that does was cancelled (so a test order doesn't get in the
+way); its sizes, images and reviews go with it. If an order is still open, or
+the product has been sold, the dialog says which and offers to hide it
+instead. Removing a single size follows the same open-order rule as before.
+Confirmation dialogs also get space between their text and buttons, and fill
+the screen width as bottom sheets on phones.
+
 **The storefront feels like an app on phones** (≤760 px; tablets and desktops
 are unchanged). A floating glass tab bar (Home, Shop, Search, Saved, Bag)
 replaces the header icons; its highlight glides between tabs and it slims down

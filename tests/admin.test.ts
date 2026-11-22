@@ -199,6 +199,61 @@ test("an editor cannot move a variant from another product", async () => {
     /does not belong/,
   );
 });
+test("a product can be deleted only when every order containing it was cancelled", async () => {
+  const [customer] = await database.db
+    .insert(s.customers)
+    .values({ phone: "+8801700000001", name: "Fixture Shopper" })
+    .returning();
+  let orderNumber = 9000;
+  async function orderWith(productId: string, status: s.OrderStatus) {
+    const [variant] = await database.db.select().from(s.productVariants).where(eq(s.productVariants.productId, productId));
+    const [order] = await database.db
+      .insert(s.orders)
+      .values({
+        orderNumber: `TEST-${++orderNumber}`, status, customerId: customer.id, customerName: customer.name, customerPhone: customer.phone,
+        shippingAddress: { line1: "1 Fixture Road", area: "Fixture", city: "Dhaka", zone_id: "inside" }, deliveryZoneId: "inside",
+        deliveryFee: 0, subtotal: 100, total: 100, paymentMethod: "cod",
+      })
+      .returning();
+    await database.db.insert(s.orderItems).values({
+      orderId: order.id, variantId: variant.id, productName: "Fixture Mist", variantLabel: "50 ml", brandName: "Fixture House",
+      unitPrice: 100, quantity: 1, lineTotal: 100,
+    });
+    return order;
+  }
+  const exists = async (id: string) =>
+    (await database.db.select().from(s.products).where(eq(s.products.id, id))).length === 1;
+
+  // Never ordered: deleted along with its reviews.
+  const unused = await catalog.saveProductRecord(undefined, input());
+  await database.db.insert(s.reviews).values({ productId: unused, customerName: "Fixture Shopper", rating: 5, body: "Fixture review" });
+  assert.deepEqual(await catalog.productRemoval(unused), { sizes: 1, reviews: 1, blocked: null });
+  assert.equal((await catalog.deleteProductRecord(unused)).ok, true);
+  assert.equal(await exists(unused), false);
+  assert.equal((await database.db.select().from(s.reviews).where(eq(s.reviews.productId, unused))).length, 0);
+
+  // An open order blocks deleting the product and removing the size. Once it's
+  // cancelled the product goes, and the order keeps its own copy of the line.
+  const tested = await catalog.saveProductRecord(undefined, input());
+  const order = await orderWith(tested, "pending");
+  const refused = await catalog.deleteProductRecord(tested);
+  assert.equal(refused.ok, false);
+  assert.match(refused.message, new RegExp(`Order ${order.orderNumber} is still open`));
+  await assert.rejects(catalog.saveProductRecord(tested, input()), /belongs to an open order/);
+  assert.equal(await exists(tested), true);
+  await database.db.update(s.orders).set({ status: "cancelled" }).where(eq(s.orders.id, order.id));
+  assert.equal((await catalog.deleteProductRecord(tested)).ok, true);
+  const [line] = await database.db.select().from(s.orderItems).where(eq(s.orderItems.orderId, order.id));
+  assert.equal(line.variantId, null);
+  assert.equal(line.productName, "Fixture Mist");
+
+  // Sold before: kept for the sales records.
+  const sold = await catalog.saveProductRecord(undefined, input());
+  const delivered = await orderWith(sold, "delivered");
+  assert.equal((await catalog.productRemoval(sold)).blocked, `It was sold in order ${delivered.orderNumber}, so it stays for your sales records.`);
+  assert.equal((await catalog.deleteProductRecord(sold)).ok, false);
+  assert.equal(await exists(sold), true);
+});
 test("uploads decode bytes, reject spoofed MIME and enforce image size", async () => {
   const png = await sharp({
     create: { width: 2000, height: 500, channels: 3, background: "#cccccc" },
