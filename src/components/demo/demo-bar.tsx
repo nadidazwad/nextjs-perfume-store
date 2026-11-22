@@ -16,6 +16,7 @@ export async function DemoBar({ place }: { place: "store" | "admin" }) {
       expiresAt={sandbox?.expiresAt.toISOString() ?? null}
       renderedAt={renderedAt}
       stale={!sandbox && hasStaleSandboxCookie(source)}
+      paused={env.DEMO_PAUSED}
     />
   );
 }

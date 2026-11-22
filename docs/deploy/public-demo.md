@@ -70,6 +70,15 @@ demo data seeded.
 - Anything you change in the admin with your own login changes the original
   demo, and every sandbox started afterwards copies it.
 
+## Pausing it
+
+Set `DEMO_PAUSED=true` and redeploy to stop starting and resetting sandboxes,
+which copy the store tables and are most of the demo's compute. The storefront
+stays up to browse, while ordering and reviews stay off as they are for any
+visitor without a sandbox. The demo bar, `/demo` and the admin sign-in page say
+the demo is paused and link to the repo. Sandboxes already running last until
+they expire. Remove the variable and redeploy to resume.
+
 ## Turning it off
 
 Remove `DEMO_MODE` (and `DATABASE_URL_DIRECT`, `CRON_SECRET`) and redeploy.

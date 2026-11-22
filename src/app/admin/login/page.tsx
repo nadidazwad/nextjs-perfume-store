@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { adminSession } from "@/lib/admin/session";
 import { env } from "@/lib/env";
+import { DEMO_REPO_URL } from "@/lib/demo/repo";
 import { LoginForm } from "@/components/admin/auth-controls";
 import { storeConfig } from "../../../../store.config";
 export default async function Login() {
@@ -39,7 +40,15 @@ export default async function Login() {
           <LoginForm />
           {env.DEMO_MODE && (
             <p className="admin-muted admin-login-demo">
-              Just looking? <Link href="/demo">Try the admin in your own demo store</Link>.
+              {env.DEMO_PAUSED ? (
+                <>
+                  Just looking? The live demo is paused for now; <a href={DEMO_REPO_URL}>try it from the repo</a>.
+                </>
+              ) : (
+                <>
+                  Just looking? <Link href="/demo">Try the admin in your own demo store</Link>.
+                </>
+              )}
             </p>
           )}
         </div>

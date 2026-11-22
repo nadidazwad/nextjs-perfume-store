@@ -25,9 +25,12 @@ export type DemoStart =
   | { ok: false; message: string };
 type Result = { ok: boolean; message: string };
 const unavailable = { ok: false as const, message: "The demo isn't available on this site." };
+// DEMO_PAUSED: copying the store per visitor is the demo's real cost, so starts and resets stop.
+const paused = { ok: false as const, message: "The live demo is paused for now." };
 
 export async function startDemo(): Promise<DemoStart> {
   if (!env.DEMO_MODE) return unavailable;
+  if (env.DEMO_PAUSED) return paused;
   const source = await headers();
   if (!(await takeRateLimit("demo-start", clientIp(source), 3, 60 * 60_000)))
     return { ok: false, message: "You've started 3 demos in the last hour. Please try again later." };
@@ -72,6 +75,7 @@ export async function startDemo(): Promise<DemoStart> {
 
 export async function resetDemo(): Promise<Result> {
   if (!env.DEMO_MODE) return unavailable;
+  if (env.DEMO_PAUSED) return paused;
   const source = await headers();
   const sandbox = await requestSandbox(source);
   const session = getSessionCookie(source);

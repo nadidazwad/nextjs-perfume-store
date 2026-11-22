@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+**Pause the public demo's admin sandboxes** with `DEMO_PAUSED=true`. Starting
+and resetting demo stores stops, since copying the store per visitor is most
+of the demo's compute, while the storefront stays up to browse. The demo bar,
+`/demo` and the admin sign-in page say the live demo is paused and link to the
+repo; ordering and reviews explain why they're off. See
+`docs/deploy/public-demo.md`.
+
 **Fix: the public demo's order alerts stay redacted in production logs.** The
 demo sends order alerts only to the console, but decided whether to redact
 them from `NOTIFY_ADAPTER`. With it set to `telegram` or `resend`, each demo

@@ -39,6 +39,14 @@ const envSchema = z
       .enum(["true", "false", ""])
       .default("false")
       .transform((value) => value === "true"),
+    /**
+     * With DEMO_MODE: stop starting demo stores for now. The storefront stays
+     * up to browse; the demo bar and /demo point visitors to the repo instead.
+     */
+    DEMO_PAUSED: z
+      .enum(["true", "false", ""])
+      .default("false")
+      .transform((value) => value === "true"),
     /** Vercel Cron sends it as a bearer token; the demo cleanup job requires it. */
     CRON_SECRET: z.string().min(16).optional(),
 
