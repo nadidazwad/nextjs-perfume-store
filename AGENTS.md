@@ -27,7 +27,7 @@ Open-source perfume store template: a storefront plus admin panel for phone-conf
 
 ## Done
 
-`pnpm lint && pnpm typecheck && pnpm test && pnpm build` green, `pnpm db:seed` still idempotent, affected pages checked at 360 px and desktop, and the relevant acceptance criteria in `docs/SPEC.md` met. `pnpm build` and `pnpm dev` share `.next`, so stop dev before building, and delete a leftover `.data/pglite/postmaster.pid` if dev was killed.
+`pnpm lint && pnpm typecheck && pnpm test && pnpm build` green, `pnpm db:seed` still idempotent, affected pages checked at 360 px and desktop, and the relevant acceptance criteria in `docs/SPEC.md` met. `pnpm build` and `pnpm dev` share `.next`, so stop dev before building, and delete a leftover `.data/pglite/postmaster.pid` if dev was killed. To stop a Next server, list its PIDs (`ps -eo pid,args | grep -E "^ *[0-9]+ next-server"`) and `kill` them in a separate command: `pkill -f` or `pgrep -f` with a Next pattern also matches the agent's own `bash -c` shell and kills it.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

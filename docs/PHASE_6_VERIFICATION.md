@@ -237,8 +237,8 @@ deployed.
 5. ~~Watch the first CI run~~: both jobs passed on GitHub.
 6. Deploy the public demo with [docs/deploy/vercel-neon.md](deploy/vercel-neon.md),
    place a real order, and add the demo link to the README. Don't publish
-   the demo's admin login: sandboxed visitor access to the admin is planned
-   as Phase 7 in `docs/IMPLEMENTATION_PLAN.md`.
+   the demo's admin login: sandboxed visitor access to the admin came
+   in Phase 7 (`docs/PHASE_7_VERIFICATION.md`).
 7. Tag `v0.1.0` and publish a GitHub release from `CHANGELOG.md`.
 
 ## Public demo (2026-09-27)

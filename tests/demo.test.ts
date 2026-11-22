@@ -140,6 +140,30 @@ test("DEMO_MODE forces order alerts to the console, whatever NOTIFY_ADAPTER says
   assert.match(demo, /SENT true/);
 });
 
+test("in production, the demo's order alerts reach the log redacted even with NOTIFY_ADAPTER=telegram", () => {
+  const script = `
+    globalThis.fetch = async () => { console.log("FETCHED"); return new Response("{\\"ok\\":true}"); };
+    require("./src/lib/notify").notifyNewOrder({
+      order: { id: "o1", orderNumber: "ATR-1", customerName: "Fixture Buyer", customerPhone: "+8801712345678",
+        shippingAddress: { line1: "12 Fixture Road", area: "Gulshan", city: "Dhaka", zone_id: "inside" },
+        discount: 0, deliveryFee: 0, total: 100, paymentMethod: "cod", paymentTxnId: null },
+      items: [{ quantity: 1, brandName: "B", productName: "P", variantLabel: "50 ml", lineTotal: 100 }],
+    }).then(() => console.log("DONE"));`;
+  const log = spawnSync(process.execPath, ["--import", "tsx", "-e", script], {
+    cwd: project,
+    encoding: "utf8",
+    env: {
+      PATH: process.env.PATH, NODE_ENV: "production", DEMO_MODE: "true", DATABASE_URL: "postgres://u:p@localhost:1/db",
+      NEXT_PUBLIC_APP_URL: "https://demo.example.com", BETTER_AUTH_SECRET: "fixture-secret-0123456789",
+      NOTIFY_ADAPTER: "telegram", TELEGRAM_BOT_TOKEN: "t", TELEGRAM_CHAT_ID: "c",
+    },
+  }).stdout;
+  assert.match(log, /1 item\(s\)[\s\S]*DONE/);
+  assert.doesNotMatch(log, /FETCHED|NOTIFY_ADAPTER/);
+  for (const secret of ["Fixture Buyer", "+8801712345678", "12 Fixture Road"])
+    assert.ok(!log.includes(secret), `logged ${secret}`);
+});
+
 test("with DEMO_MODE off, suggest stays CDN-cacheable and links carry no ugc rel", async () => {
   const { GET } = await import("../src/app/api/search/suggest/route");
   const { NextRequest } = await import("next/server");

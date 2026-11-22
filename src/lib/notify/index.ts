@@ -10,10 +10,14 @@ const adapters = {
   resend: resendAdapter,
   telegram: telegramAdapter,
 };
+type AdapterName = keyof typeof adapters;
+/** The public demo never messages anyone about orders: visitors' orders only reach the log. */
+const orderAdapter = (): AdapterName => (env.DEMO_MODE ? "console" : env.NOTIFY_ADAPTER);
+/** Decided by the adapter that really sends, not the configured one (see orderAdapter). */
+const redacts = (adapter: AdapterName) => adapter === "console" && env.NODE_ENV === "production";
 async function send(subject: string, text: string) {
   try {
-    // The public demo never messages anyone: visitors' orders only reach the (redacted) log.
-    await adapters[env.DEMO_MODE ? "console" : env.NOTIFY_ADAPTER].send(subject, text);
+    await adapters[orderAdapter()].send(subject, text);
     return true;
   } catch {
     // Do not log provider errors: they can contain credentials or response payloads.
@@ -37,7 +41,8 @@ export function orderNotificationText(
     return [
       `${items.reduce((sum, item) => sum + item.quantity, 0)} item(s) | Total: ${formatMoney(order.total)} | Payment: ${order.paymentMethod}`,
       `Details: ${link}`,
-      "Set NOTIFY_ADAPTER=telegram or resend to receive full order alerts.",
+      // The demo never sends order alerts anywhere else, so the hint can't help there.
+      ...(env.DEMO_MODE ? [] : ["Set NOTIFY_ADAPTER=telegram or resend to receive full order alerts."]),
     ].join("\n");
   const address = order.shippingAddress;
   return [
@@ -58,9 +63,7 @@ export function orderNotificationText(
 export async function notifyNewOrder(notification: OrderNotification) {
   await send(
     `${storeConfig.store.name}: ${notification.order.orderNumber}`,
-    orderNotificationText(notification, {
-      redact: env.NOTIFY_ADAPTER === "console" && env.NODE_ENV === "production",
-    }),
+    orderNotificationText(notification, { redact: redacts(orderAdapter()) }),
   );
 }
 export async function notifyTestPing() {

@@ -16,6 +16,10 @@ zones and payment methods all live in one config file.
 private copy of the store for 2 hours. Edit products, confirm and ship orders, rearrange the
 homepage and place orders; nobody else sees your changes.
 
+> **The live demo is paused for now.** The whole store, admin included, runs on
+> your machine with no accounts or configuration: see
+> [Try it locally](#try-it-locally-no-accounts-needed).
+
 ![Storefront home page](docs/screenshots/storefront/home.webp)
 
 ## What you get
@@ -195,7 +199,6 @@ pnpm db:seed      # idempotent seed; --admin-only for a clean store
 | [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) | Every storefront and admin screen, desktop and phone |
 | [docs/SPEC.md](docs/SPEC.md) | The full functional spec: data model and every feature with acceptance criteria |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | Design tokens and UI rules for the storefront and admin |
-| [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) | How it was built, phase by phase |
 | [AGENTS.md](AGENTS.md) | Invariants for contributors and AI agents; the repo map and recipes are in [CONTRIBUTING.md](CONTRIBUTING.md) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to set up, test and send a pull request |
 

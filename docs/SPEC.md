@@ -6,9 +6,7 @@ manual (phone-confirmed) order fulfillment, zero-cost deployment.
 > **How to read this document.** §1–3 define scope and structure. §4 is the complete
 > data model. §5 (storefront), §6 (admin), §7 (platform) are the feature specs,
 > broken into numbered tasks (`ST-*`, `AD-*`, `PF-*`) with acceptance criteria.
-> Build order lives in `docs/IMPLEMENTATION_PLAN.md`, which references these task
-> IDs. UX patterns marked "(J)" were observed on Jomashop — see
-> `docs/research/jomashop-findings.md`.
+> UX patterns marked "(J)" were observed on Jomashop.
 
 ---
 

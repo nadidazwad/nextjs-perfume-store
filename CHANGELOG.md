@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+**Fix: the public demo's order alerts stay redacted in production logs.** The
+demo sends order alerts only to the console, but decided whether to redact
+them from `NOTIFY_ADAPTER`. With it set to `telegram` or `resend`, each demo
+order logged the customer's name, phone and address. Real stores (demo mode
+off) were not affected, and the demo's redacted alert no longer suggests a
+setting that can't apply there. Also removed the build plan, old phase
+verification records, UI polish notes and the Jomashop research from `docs/`.
+
 **Delete products added by mistake** (#14). The product editor's Visibility
 panel has a Delete button. A product can be deleted when no order contains it,
 or every order that does was cancelled (so a test order doesn't get in the
