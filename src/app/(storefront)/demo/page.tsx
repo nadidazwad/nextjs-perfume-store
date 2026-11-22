@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { DemoPanel } from "@/components/demo/demo-controls";
@@ -41,6 +42,15 @@ export default async function Page({ searchParams }: PageProps<"/demo">) {
           <p>Use invented names and phone numbers. Nothing is sent anywhere: order alerts stay in the server log.</p>
         </li>
       </ul>
+      <div className="panel demo-hire">
+        <div>
+          <h2>Want this for your own shop?</h2>
+          <p className="muted">I can set it up for your brand, with your products and payment numbers, ready to take orders.</p>
+        </div>
+        <Link className="button primary" href="/get-your-store">
+          Get this store
+        </Link>
+      </div>
     </div>
   );
 }

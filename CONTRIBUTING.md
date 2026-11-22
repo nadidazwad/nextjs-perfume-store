@@ -124,7 +124,8 @@ src/
                              product-reviews.tsx + review-form.tsx (ST-17)
                              saved-products.ts   localStorage wishlist/recent
                              wishlist.tsx, recently-viewed.tsx (ST-14)
-    demo/                    demo bar + /demo controls (DEMO_MODE only)
+    demo/                    demo bar + /demo controls, /get-your-store
+                             form (DEMO_MODE only)
     admin/                   admin components; ui.tsx (PageHeader, Panel,
                              StatusBadge…), fields.tsx (ImageField, Switch,
                              Chips, ConfirmButton), combobox.tsx,
@@ -157,6 +158,8 @@ src/
     notify/                  console | resend | telegram adapters
     demo/                    DEMO_MODE public demo: sandbox lifecycle, signed
                              cookie, actions (start/reset/end/resume), uploads
+    setup-requests/          DEMO_MODE "Get this store" form: schema, action
+                             (saved via publicDb, sent with notifyOperator)
     storage/                 local (.data/uploads) | s3 (R2-compatible)
   proxy.ts                   per-request CSP script nonce (lib/csp.ts), admin
                              cookie redirect, flag-off 404s

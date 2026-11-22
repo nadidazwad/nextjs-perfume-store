@@ -20,6 +20,9 @@ homepage and place orders; nobody else sees your changes.
 > your machine with no accounts or configuration: see
 > [Try it locally](#try-it-locally-no-accounts-needed).
 
+**Run a perfume or attar shop and don't want to deal with code?**
+[Get this store set up for you →](https://nextjs-perfume-store.vercel.app/get-your-store)
+
 ![Storefront home page](docs/screenshots/storefront/home.webp)
 
 ## What you get
@@ -74,6 +77,17 @@ homepage and place orders; nobody else sees your changes.
 </tr></table>
 
 **[See all 38 screenshots →](docs/SCREENSHOTS.md)**
+
+## Want it set up for you?
+
+If you sell perfume or attar and would rather not touch code, I can set this
+store up for your shop: your name, logo and colours (or a design made for your
+brand), your products and prices, delivery charges, Cash on Delivery,
+bKash and Nagad, new-order alerts, and your own domain. You get the admin
+panel and a walkthrough of running it from your phone.
+
+**[Tell me about your shop →](https://nextjs-perfume-store.vercel.app/get-your-store)**
+It takes a minute, and there's no payment until we've talked.
 
 ## Try it locally (no accounts needed)
 

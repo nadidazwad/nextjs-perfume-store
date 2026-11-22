@@ -66,6 +66,15 @@ function SandboxActions({ tone }: { tone: "bar" | "page" }) {
   );
 }
 
+/** Shop owners who like what they see can ask for their own store. */
+function HireLink() {
+  return (
+    <Link className="demo-bar-link" href="/get-your-store">
+      Get this for your shop
+    </Link>
+  );
+}
+
 export function DemoBarView({
   place,
   expiresAt,
@@ -97,6 +106,7 @@ export function DemoBarView({
         <Link className="demo-bar-btn solid" href="/demo">
           {stale ? "Start a new one" : "Try the admin"}
         </Link>
+        <HireLink />
       </div>
     );
   return <LiveBar place={place} expiresAt={expiresAt} renderedAt={renderedAt} />;
@@ -118,6 +128,7 @@ function LiveBar({ place, expiresAt, renderedAt }: { place: "store" | "admin"; e
           </Link>
         )}
         {left ? <SandboxActions tone="bar" /> : <Link className="demo-bar-btn solid" href="/demo">Start a new one</Link>}
+        <HireLink />
       </span>
     </div>
   );

@@ -4,6 +4,7 @@ import { orders, reviews } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin/session";
 import { AdminShell } from "@/components/admin/navigation";
 import { DemoBar } from "@/components/demo/demo-bar";
+import { env } from "@/lib/env";
 import { storeConfig } from "../../../../store.config";
 export default async function Layout({
   children,
@@ -22,6 +23,8 @@ export default async function Layout({
       storeName={storeConfig.store.name}
       pending={pending.count}
       pendingReviews={pendingReviews[0].count}
+      // Setup requests are the demo owner's inbox; demo visitors never see them.
+      setupRequests={env.DEMO_MODE && user.role === "admin"}
       user={{ name: user.name, email: user.email, role: user.role }}
       banner={<DemoBar place="admin" />}
     >

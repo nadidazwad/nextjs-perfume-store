@@ -198,3 +198,165 @@
     grid-row: 2;
   }
 }
+
+/* === /get-your-store ====================================================== */
+.setup-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+  gap: clamp(32px, 6vw, 88px);
+  align-items: start;
+}
+.setup-pitch {
+  display: grid;
+  gap: 20px;
+  align-content: start;
+}
+.setup-pitch h1 {
+  margin: 0;
+}
+.setup-eyebrow {
+  margin: 0;
+  color: var(--sf-muted);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.setup-lede {
+  max-width: 52ch;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.setup-points {
+  display: grid;
+  gap: 0;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--sf-line);
+}
+.setup-points li {
+  display: grid;
+  gap: 6px;
+  padding-block: 18px;
+  border-bottom: 1px solid var(--sf-line);
+}
+.setup-points strong {
+  color: var(--sf-ink);
+  font-size: 15px;
+  font-weight: 550;
+}
+.setup-points p {
+  max-width: 56ch;
+  margin: 0;
+  color: var(--sf-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.setup-try {
+  margin: 0;
+  color: var(--sf-muted);
+  font-size: 14px;
+}
+.setup-try a {
+  color: var(--sf-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.setup-form {
+  display: grid;
+  gap: 16px;
+}
+.setup-form > h2 {
+  margin: 0 0 4px;
+}
+.setup-form > .button {
+  width: 100%;
+}
+.setup-form > .field-hint {
+  margin: -4px 0 0;
+  text-align: center;
+}
+.setup-plans {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.setup-plans legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--sf-ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+.setup-plans label {
+  align-items: flex-start;
+  border-color: var(--sf-line-strong);
+  border-radius: var(--sf-r-control);
+  background: white;
+}
+.setup-plans input {
+  flex-shrink: 0;
+  margin: 1px 0 0;
+}
+.setup-plans label > span {
+  display: grid;
+  gap: 2px;
+}
+.setup-plans strong {
+  color: var(--sf-ink);
+  font-size: 14.5px;
+  font-weight: 550;
+}
+.setup-plans small {
+  color: var(--sf-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.setup-done {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+.setup-done h2 {
+  margin: 0;
+}
+.setup-done p {
+  margin: 0;
+  line-height: 1.6;
+}
+/* A quiet link to /get-your-store in the demo bar. */
+.demo-bar .demo-bar-link {
+  color: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: rgb(255 255 255 / 40%);
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.demo-bar .demo-bar-link:hover {
+  text-decoration-color: currentColor;
+}
+.demo-hire {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 40px;
+}
+.demo-hire h2 {
+  margin: 0 0 6px;
+}
+.demo-hire p {
+  max-width: 56ch;
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .setup-page {
+    grid-template-columns: 1fr;
+  }
+}

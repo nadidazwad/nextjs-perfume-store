@@ -365,6 +365,7 @@ test("public Server Action modules are the reviewed set", () => {
     "src/lib/checkout/actions.ts",
     "src/lib/demo/actions.ts",
     "src/lib/reviews/actions.ts",
+    "src/lib/setup-requests/actions.ts",
   ];
   const found = readdirSync(join(project, "src"), { recursive: true, encoding: "utf8" })
     .filter((file) => /\.tsx?$/.test(file))

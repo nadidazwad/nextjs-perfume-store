@@ -203,6 +203,17 @@ export const sandboxUploads = pgTable("sandbox_uploads", {
 }, (t) => [check("sandbox_uploads_key_check", sql`${t.key} ~ '^sbx-[a-zA-Z0-9-]+[.]webp$'`)]);
 
 /**
+ * "Get this store" requests from shop owners who want the project's author to
+ * set a store up for them. Only the public demo (DEMO_MODE) shows the form, so
+ * this is always empty on a real store. Never copied into sandboxes.
+ */
+export const setupRequests = pgTable("setup_requests", {
+  id: id(), name: text("name").notNull(), business: text("business").notNull(), contact: text("contact").notNull(),
+  link: text("link"), plan: text("plan").notNull(), message: text("message"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("setup_requests_created_idx").on(t.createdAt)]);
+
+/**
  * Which tables a demo sandbox copies. Store data is copied; auth, rate limits
  * and the sandbox registry stay in `public` only. tests/sandbox.test.ts fails
  * if a table is added to this file without being listed in one of the two.
@@ -211,7 +222,7 @@ export const sandboxTables = [
   brands, collections, notes, products, productNotes, productVariants, productImages, customers, orders, orderItems,
   orderEvents, banners, homepageSections, staticPages, settings, coupons, reviews, sandboxUploads,
 ] as const;
-export const publicOnlyTables = [user, session, account, verification, rateLimits, demoSandboxes] as const;
+export const publicOnlyTables = [user, session, account, verification, rateLimits, demoSandboxes, setupRequests] as const;
 /** Sequences a sandbox gets its own copy of. */
 export const sandboxSequences = [orderNumberSequence] as const;
 

@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { products, brands, collections, staticPages } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { absoluteUrl } from "@/lib/seo";
+import { env } from "@/lib/env";
 export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const rows = await Promise.all([
@@ -21,7 +22,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .where(eq(staticPages.isActive, true)),
   ]);
   return [
-    ...["/", "/products", "/brands"].map((path) => ({
+    // The public demo also advertises its "Get this store" page.
+    ...["/", "/products", "/brands", ...(env.DEMO_MODE ? ["/get-your-store"] : [])].map((path) => ({
       url: absoluteUrl(path),
     })),
     ...rows.flatMap((group, i) =>

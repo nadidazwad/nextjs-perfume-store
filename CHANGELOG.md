@@ -19,6 +19,17 @@ instead. Removing a single size follows the same open-order rule as before.
 Confirmation dialogs also get space between their text and buttons, and fill
 the screen width as bottom sheets on phones.
 
+**"Get this store" requests on the public demo.** With `DEMO_MODE` on, a new
+`/get-your-store` page lets shop owners ask the project's author to set a store
+up for them, and the demo bar and `/demo` page link to it. Requests are saved
+in a new `setup_requests` table (public-only, never copied into sandboxes) and
+listed at `/admin/setup-requests` for the deployment's own admin; demo
+visitors never see them. Each request is also sent through `NOTIFY_ADAPTER`,
+even in demo mode (order alerts still stay in the log there). The form is
+rate-limited to 3 per visitor IP per hour and has a honeypot. Real stores
+(demo mode off) get none of it: the page, the admin page and the menu entry
+are absent. See `docs/deploy/public-demo.md`.
+
 **The storefront feels like an app on phones** (≤760 px; tablets and desktops
 are unchanged). A floating glass tab bar (Home, Shop, Search, Saved, Bag)
 replaces the header icons; its highlight glides between tabs and it slims down

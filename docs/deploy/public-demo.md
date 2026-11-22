@@ -60,6 +60,24 @@ demo data seeded.
    each, rename the same product in both, and check that each window shows
    only its own name while a third window shows the original.
 
+## Setup requests
+
+The demo also carries a **Get this store** page (`/get-your-store`, linked from
+the demo bar, `/demo` and the README) where shop owners can ask for a store to
+be set up for them. Each request:
+
+- is saved in `setup_requests`, a public-only table, and listed at
+  **Admin → Setup requests** when you sign in with your own `ADMIN_EMAIL`
+  account. Demo visitors don't see the menu entry, and the page answers 404
+  for them.
+- is sent through `NOTIFY_ADAPTER` right away. Order alerts from visitors never
+  leave the log in demo mode, but these do, so set `NOTIFY_ADAPTER=telegram`
+  (or `resend`) with its variables to hear about them on your phone. With
+  `console`, the production log only says a request arrived, with a link.
+
+The form allows 3 requests per visitor IP per hour and has a honeypot field
+for bots. None of this exists with `DEMO_MODE` off.
+
 ## Limits and costs
 
 - A sandbox of the seeded demo is well under 1 MB; 50 of them fit easily in

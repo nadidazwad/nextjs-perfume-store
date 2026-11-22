@@ -8,6 +8,7 @@ import {
   Layers,
   LayoutGrid,
   LayoutTemplate,
+  Inbox,
   Megaphone,
   Menu,
   MessageSquareText,
@@ -66,6 +67,7 @@ export function AdminShell({
   storeName,
   pending,
   pendingReviews = 0,
+  setupRequests = false,
   user,
   banner,
   children,
@@ -73,6 +75,8 @@ export function AdminShell({
   storeName: string;
   pending: number;
   pendingReviews?: number;
+  /** Public demo owner only: the "Get this store" inbox. */
+  setupRequests?: boolean;
   user: { name: string; email: string; role?: string };
   /** Public demo status bar (DEMO_MODE only). */
   banner?: ReactNode;
@@ -140,7 +144,10 @@ export function AdminShell({
           </button>
         </div>
         <nav className="admin-nav">
-          {groups.filter((group) => group.links.length).map((group) => (
+          {[
+            ...groups,
+            ...(setupRequests ? [{ label: "Public demo", links: [["setup-requests", "Setup requests", Inbox] satisfies NavLink] }] : []),
+          ].filter((group) => group.links.length).map((group) => (
             <div key={group.label} className="admin-nav-group">
               <p>{group.label}</p>
               {group.links.map(([route, title, Icon]) => (

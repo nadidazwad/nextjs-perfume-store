@@ -72,3 +72,16 @@ export async function notifyTestPing() {
     "Order notifications are connected.",
   );
 }
+/**
+ * Messages for whoever runs the deployment, not the shop team: they use the
+ * configured adapter even with DEMO_MODE on, because visitors can't trigger
+ * them freely (the only caller is rate-limited). In production the console
+ * adapter only gets `fallback`, which must hold no contact details.
+ */
+export async function notifyOperator(subject: string, text: string, fallback: string) {
+  try {
+    await adapters[env.NOTIFY_ADAPTER].send(subject, redacts(env.NOTIFY_ADAPTER) ? fallback : text);
+  } catch {
+    console.error("Operator notification failed. Check notification settings; the request is saved.");
+  }
+}
