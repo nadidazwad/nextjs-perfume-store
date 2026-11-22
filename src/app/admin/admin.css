@@ -2816,6 +2816,10 @@ a.admin-kpi:hover .admin-kpi-arrow {
   padding: 16px 24px 22px;
   border-top: 1px solid var(--line);
 }
+/* Confirmations have no body, so keep their text off the divider. */
+.admin-dialog-head + .admin-dialog-foot {
+  margin-top: 20px;
+}
 
 /* ---------- Product editor ---------- */
 .admin-editor-grid {
@@ -3038,6 +3042,12 @@ a.admin-kpi:hover .admin-kpi-arrow {
 }
 .admin-editor-rail .admin-panel {
   padding: 18px;
+}
+/* Delete sits under the visibility switches: hiding and deleting are one decision. */
+.admin-panel-delete {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
 }
 .admin-editor-rail .admin-field > .admin-text-btn,
 .admin-field > .admin-combo + .admin-field-error + .admin-text-btn,
@@ -3957,7 +3967,8 @@ a.admin-kpi:hover .admin-kpi-arrow {
   .admin-savebar[data-visible] {
     transform: none;
   }
-  .admin-root dialog.admin-dialog {
+  .admin-root dialog.admin-dialog,
+  .admin-root dialog.admin-dialog.sm {
     width: 100%;
     max-width: none;
     max-height: 92vh;

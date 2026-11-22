@@ -14,7 +14,7 @@ import {
   type ActionResult,
   type Entity,
 } from "./schema";
-import { saveProductRecord } from "./catalog";
+import { deleteProductRecord, saveProductRecord } from "./catalog";
 import { transitionOrder } from "@/lib/orders/transitions";
 import { notifyTestPing } from "@/lib/notify";
 import { env } from "@/lib/env";
@@ -61,6 +61,17 @@ export async function saveProduct(
     return { ok: true, message: "Product saved.", id: saved };
   } catch (error) {
     return failure(error);
+  }
+}
+export async function deleteProduct(id: string): Promise<ActionResult> {
+  await requireAdmin();
+  if (!validId(id)) return invalidRequest;
+  try {
+    const result = await deleteProductRecord(id);
+    if (result.ok) refresh();
+    return result;
+  } catch {
+    return { ok: false, message: "Unable to delete. Try again." };
   }
 }
 export async function saveEntity(

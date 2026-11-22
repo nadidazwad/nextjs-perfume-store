@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { products, productImages } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin/session";
 import { editorChoices } from "@/lib/admin/choices";
+import { productRemoval } from "@/lib/admin/catalog";
 import { ProductEditor } from "@/components/admin/product-editor";
 export default async function Product({
   params,
@@ -25,11 +26,13 @@ export default async function Product({
           },
         });
   if (id !== "new" && !p) notFound();
+  const removal = p && (await productRemoval(p.id));
   return (
     <ProductEditor
         key={p?.updatedAt.toISOString() ?? "new"}
         id={p?.id}
         choices={choices}
+        removal={removal}
         initial={
           p
             ? {

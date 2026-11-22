@@ -16,13 +16,15 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { saveProduct } from "@/lib/admin/actions";
+import { deleteProduct, productFlags, saveProduct } from "@/lib/admin/actions";
 import type { ActionResult, ProductInput } from "@/lib/admin/schema";
+import type { ProductRemoval } from "@/lib/admin/catalog";
 import { formatMoney } from "@/lib/money";
 import { slugify } from "@/lib/slug";
 import { humanize } from "@/lib/admin/format";
 import {
   ChipChoice,
+  ConfirmButton,
   FieldError,
   MarkdownField,
   Result,
@@ -82,6 +84,64 @@ function slug(value: string) {
     return "";
   }
 }
+/** Delete for products added by mistake; hide for products with order history. */
+function DeleteProduct({
+  name,
+  visible,
+  dirty,
+  removal,
+  disabled,
+  onDelete,
+  onHide,
+}: {
+  name: string;
+  visible: boolean;
+  /** Hiding reloads the editor, so it's only offered when there's nothing unsaved to lose. */
+  dirty: boolean;
+  removal: ProductRemoval;
+  disabled: boolean;
+  onDelete: () => void;
+  onHide: () => void;
+}) {
+  const label = (
+    <>
+      <Trash2 size={15} /> Delete product
+    </>
+  );
+  if (removal.blocked) {
+    const canHide = visible && !dirty;
+    return (
+      <ConfirmButton
+        title="This product can't be deleted"
+        body={`${removal.blocked} ${
+          !visible
+            ? "It's already hidden from the store."
+            : dirty
+              ? "To take it off the store, turn off Visible in store and save."
+              : "To take it off the store, hide it instead."
+        }`}
+        confirmLabel={canHide ? "Hide product" : undefined}
+        onConfirm={canHide ? onHide : undefined}
+        disabled={disabled}
+      >
+        {label}
+      </ConfirmButton>
+    );
+  }
+  const sizes = removal.sizes === 1 ? "its size" : `its ${removal.sizes} sizes`;
+  const reviews = removal.reviews ? (removal.reviews === 1 ? "1 review" : `${removal.reviews} reviews`) : null;
+  return (
+    <ConfirmButton
+      title={`Delete ${name}?`}
+      body={`This permanently removes the product${reviews ? `, ${sizes} and ${reviews}` : ` and ${sizes}`}. You can't undo this.`}
+      confirmLabel="Delete product"
+      onConfirm={onDelete}
+      disabled={disabled}
+    >
+      {label}
+    </ConfirmButton>
+  );
+}
 function tabOf(key: string): Tab {
   if (key.startsWith("variants")) return "Variants";
   if (key.startsWith("images")) return "Images";
@@ -92,10 +152,13 @@ export function ProductEditor({
   id,
   initial,
   choices,
+  removal,
 }: {
   id?: string;
   initial?: ProductInput;
   choices: Choices;
+  /** Existing products only: what deleting would remove, or why it can't. */
+  removal?: ProductRemoval;
 }) {
   const [data, setData] = useState(initial ?? empty);
   const [saved, setSaved] = useState(() => JSON.stringify(initial ?? empty));
@@ -154,6 +217,39 @@ export function ProductEditor({
       } catch {
         setResult({ ok: false, message: "Unable to save. Try again." });
         toast.error("Unable to save. Try again.");
+      }
+    });
+  }
+  function remove() {
+    if (!id) return;
+    start(async () => {
+      try {
+        const r = await deleteProduct(id);
+        if (r.ok) {
+          toast.success(r.message);
+          router.replace("/admin/products");
+        } else {
+          setResult(r);
+          toast.error(r.message);
+          router.refresh(); // The page's check was stale; show the current reason.
+        }
+      } catch {
+        setResult({ ok: false, message: "Unable to delete. Try again." });
+        toast.error("Unable to delete. Try again.");
+      }
+    });
+  }
+  function hide() {
+    if (!id) return;
+    start(async () => {
+      try {
+        const r = await productFlags([id], { isActive: false });
+        if (r.ok) {
+          toast.success("Product hidden from the store.");
+          router.refresh();
+        } else toast.error(r.message);
+      } catch {
+        toast.error("Unable to hide. Try again.");
       }
     });
   }
@@ -666,6 +762,19 @@ export function ProductEditor({
               <SwitchField label="Featured" description="Eligible for featured carousels." checked={data.isFeatured} onChange={(v) => set("isFeatured", v)} />
               <SwitchField label="Ground shipping only" description="For bottles that can't fly." checked={data.groundShippingOnly} onChange={(v) => set("groundShippingOnly", v)} />
             </div>
+            {id && initial && removal && (
+              <div className="admin-panel-delete">
+                <DeleteProduct
+                  name={initial.name}
+                  visible={initial.isActive}
+                  dirty={dirty}
+                  removal={removal}
+                  disabled={pending}
+                  onDelete={remove}
+                  onHide={hide}
+                />
+              </div>
+            )}
           </Panel>
 
           <Panel title="Summary">

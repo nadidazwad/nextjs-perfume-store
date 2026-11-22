@@ -320,7 +320,10 @@ export function ChipMulti({
     </fieldset>
   );
 }
-/** Destructive action behind a modal confirmation instead of window.confirm. */
+/**
+ * Destructive action behind a modal confirmation instead of window.confirm.
+ * Without `onConfirm` the dialog only explains, e.g. why something can't be deleted.
+ */
 export function ConfirmButton({
   children,
   title,
@@ -333,8 +336,8 @@ export function ConfirmButton({
   children: ReactNode;
   title: string;
   body: ReactNode;
-  confirmLabel: string;
-  onConfirm: () => void;
+  confirmLabel?: string;
+  onConfirm?: () => void;
   disabled?: boolean;
   className?: string;
 }) {
@@ -359,18 +362,20 @@ export function ConfirmButton({
         </div>
         <div className="admin-dialog-foot">
           <button type="button" className="admin-btn" onClick={() => dialog.current?.close()}>
-            Cancel
+            {onConfirm ? "Cancel" : "Close"}
           </button>
-          <button
-            type="button"
-            className="admin-btn danger"
-            onClick={() => {
-              dialog.current?.close();
-              onConfirm();
-            }}
-          >
-            {confirmLabel}
-          </button>
+          {onConfirm && (
+            <button
+              type="button"
+              className="admin-btn danger"
+              onClick={() => {
+                dialog.current?.close();
+                onConfirm();
+              }}
+            >
+              {confirmLabel}
+            </button>
+          )}
         </div>
       </dialog>
     </>
