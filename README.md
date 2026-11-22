@@ -16,9 +16,9 @@ zones and payment methods all live in one config file.
 private copy of the store for 2 hours. Edit products, confirm and ship orders, rearrange the
 homepage and place orders; nobody else sees your changes.
 
-> **The live demo is paused for now.** The whole store, admin included, runs on
-> your machine with no accounts or configuration: see
-> [Try it locally](#try-it-locally-no-accounts-needed).
+> **"Try the admin" is paused for now.** The storefront demo is live to browse.
+> To try the admin, run the whole store on your machine with no accounts or
+> configuration: see [Try it locally](#try-it-locally-no-accounts-needed).
 
 ![Storefront home page](docs/screenshots/storefront/home.webp)
 

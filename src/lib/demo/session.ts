@@ -42,3 +42,8 @@ export function setSandboxCookie(jar: CookieJar, secret: string, id: string, exp
 export async function demoWriteRefused(source: Headers) {
   return env.DEMO_MODE && !(await requestSandbox(source));
 }
+/** Why demoWriteRefused said no, for "place orders" or "write reviews". */
+export const demoWriteMessage = (action: string) =>
+  env.DEMO_PAUSED
+    ? `The live demo is paused, so you can't ${action} here. To try everything, run it yourself from the repo linked at the top.`
+    : `This is a demo store. Start your own demo store (Try the admin, at the top) to ${action}.`;

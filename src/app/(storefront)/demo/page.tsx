@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { DemoPanel } from "@/components/demo/demo-controls";
+import { DEMO_REPO_URL } from "@/lib/demo/repo";
 import { hasStaleSandboxCookie, requestSandbox } from "@/lib/demo/session";
 import { SANDBOX_TTL_MS } from "@/lib/demo/sandbox";
 import { env } from "@/lib/env";
@@ -15,6 +16,30 @@ export default async function Page({ searchParams }: PageProps<"/demo">) {
   const { ended } = await searchParams;
   const hours = SANDBOX_TTL_MS / 3_600_000;
   const renderedAt = new Date().getTime();
+  const notices = !sandbox && (
+    <>
+      {(ended === "1" || hasStaleSandboxCookie(source)) && (
+        <p className="callout demo-notice">Your previous demo store has ended and was deleted.</p>
+      )}
+      {ended === "0" && <p className="callout demo-notice">Your demo store was deleted. Thanks for trying it.</p>}
+    </>
+  );
+  if (env.DEMO_PAUSED && !sandbox)
+    return (
+      <div className="store-width commerce-page demo-page">
+        <h1>Try the admin</h1>
+        <p className="muted demo-lede">
+          The live demo is paused for now, but you can still browse the store. To try the admin, run the whole
+          store on your own machine: it needs no accounts or configuration.
+        </p>
+        {notices}
+        <div className="demo-start">
+          <a className="button primary lg" href={DEMO_REPO_URL} target="_blank" rel="noreferrer">
+            Get it on GitHub
+          </a>
+        </div>
+      </div>
+    );
   return (
     <div className="store-width commerce-page demo-page">
       <h1>Try the admin</h1>
@@ -22,10 +47,7 @@ export default async function Page({ searchParams }: PageProps<"/demo">) {
         Get your own copy of this store for {hours} hours. Edit products, confirm and ship orders, rearrange the
         homepage, then see the result in the shop. Nobody else sees your changes.
       </p>
-      {!sandbox && (ended === "1" || hasStaleSandboxCookie(source)) && (
-        <p className="callout demo-notice">Your previous demo store has ended and was deleted.</p>
-      )}
-      {!sandbox && ended === "0" && <p className="callout demo-notice">Your demo store was deleted. Thanks for trying it.</p>}
+      {notices}
       <DemoPanel running={sandbox?.expiresAt.toISOString() ?? null} renderedAt={renderedAt} />
       <ul className="demo-points">
         <li>

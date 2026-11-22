@@ -121,6 +121,22 @@ test("with DEMO_MODE off, the demo actions refuse before touching anything", asy
   assert.equal(await users(), before);
 });
 
+test("with DEMO_PAUSED, no demo store is started or reset", () => {
+  // The database is unreachable, so reaching it would reject instead of printing the refusals.
+  const script = `
+    const { startDemo, resetDemo } = require("./src/lib/demo/actions");
+    Promise.all([startDemo(), resetDemo()]).then((results) => console.log(JSON.stringify(results)));`;
+  const out = spawnSync(process.execPath, ["--import", "tsx", "-e", script], {
+    cwd: project,
+    encoding: "utf8",
+    env: { PATH: process.env.PATH, NODE_ENV: "test", DEMO_MODE: "true", DEMO_PAUSED: "true", DATABASE_URL: "postgres://u:p@localhost:1/db" },
+  }).stdout;
+  assert.deepEqual(JSON.parse(out), [
+    { ok: false, message: "The live demo is paused for now." },
+    { ok: false, message: "Resetting is paused for now. End still deletes your demo store." },
+  ]);
+});
+
 test("DEMO_MODE forces order alerts to the console, whatever NOTIFY_ADAPTER says", () => {
   const script = `
     globalThis.fetch = async () => { console.log("FETCHED"); return new Response("{\\"ok\\":true}"); };

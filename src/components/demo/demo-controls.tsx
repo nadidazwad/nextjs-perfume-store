@@ -3,6 +3,7 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { endDemo, resetDemo, resumeDemo, startDemo, type DemoStart } from "@/lib/demo/actions";
+import { DEMO_REPO_URL } from "@/lib/demo/repo";
 
 /** "1 h 42 m", "12 m", or null once expired. Starts from the server's clock so hydration matches. */
 function useTimeLeft(expiresAt: string, renderedAt: number) {
@@ -71,11 +72,14 @@ export function DemoBarView({
   expiresAt,
   renderedAt,
   stale,
+  paused,
 }: {
   place: "store" | "admin";
   expiresAt: string | null;
   renderedAt: number;
   stale: boolean;
+  /** DEMO_PAUSED: no new demo stores, so point visitors to the repo. */
+  paused: boolean;
 }) {
   // In the admin without a sandbox you are the owner, editing the original.
   if (!expiresAt && place === "admin")
@@ -85,6 +89,18 @@ export function DemoBarView({
           <span className="demo-dot" aria-hidden />
           Original demo store: new demo stores copy what you change here.
         </p>
+      </div>
+    );
+  if (!expiresAt && paused)
+    return (
+      <div className="demo-bar" data-state="paused">
+        <p>
+          <span className="demo-dot" aria-hidden />
+          The live demo is paused.
+        </p>
+        <a className="demo-bar-btn solid" href={DEMO_REPO_URL} target="_blank" rel="noreferrer">
+          Try it from the repo
+        </a>
       </div>
     );
   if (!expiresAt)
